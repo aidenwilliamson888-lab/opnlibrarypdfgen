@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 OpenLibrary PDF Generator - PRESISI</title>
+<title>📚 OpenLibrary PDF Generator - Presisi majordome.pdf</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -29,16 +29,15 @@ input:focus { outline:none; border-color:#ffaa33; }
 <body>
 <div class="container">
 <h1>📄 OPENLIBRARY PDF GENERATOR</h1>
-<div class="preview-badge">⚡ PRESISI 100% · 20-21 Halaman (seperti contoh)</div>
+<div class="preview-badge">⚡ PRESISI 100% · Contoh: majordome.pdf (20 halaman)</div>
 
 <div class="form-panel">
-<div style="display:flex; gap:20px; margin-bottom:20px;">
-<div style="flex:1; background:#f0f0f0; padding:10px; border-radius:10px;">
+<div style="display:flex; gap:20px; margin-bottom:20px; background:#f0f0f0; padding:15px; border-radius:10px;">
+<div style="flex:1;">
 <strong>📋 STRUKTUR HALAMAN:</strong><br>
-• Hal 1: Cover + deskripsi<br>
-• Hal 2-9: Gambar transparan (tabel 1-125)<br>
-• Hal 10: Teks "Kembali ke halaman pertama"<br>
-• Hal 11-20/21: Full angka berulang
+• Hal 1: Cover dengan format "**!Download** Judul by Penulis.pdf"<br>
+• Hal 2-10: Full angka (pola 1 1 1 1 1 2 1 1 1 1 ...)<br>
+• Hal 11-20: Teks promosi bergantian (5 varian)
 </div>
 </div>
 
@@ -56,14 +55,7 @@ To Sir Phillip, With Love - Julia Quinn
 <div class="form-group download-row">
 <label>🔗 LINK DOWNLOAD (ISI MANUAL)</label>
 <input type="text" id="downloadLink" value="https://magafiles.com/1863142" placeholder="https://...">
-</div>
-
-<div class="form-group">
-<label>📄 JUMLAH HALAMAN</label>
-<select id="pageCount">
-<option value="20">20 Halaman</option>
-<option value="21">21 Halaman</option>
-</select>
+<small style="color:#666;">Link akan muncul di halaman 1 (tombol download)</small>
 </div>
 
 <button class="gen-btn" id="generateBtn">
@@ -76,8 +68,8 @@ To Sir Phillip, With Love - Julia Quinn
 <script>
 // Data buku default
 let currentBook = {
-title: 'To Sir Phillip, With Love',
-author: 'Julia Quinn',
+title: 'Think Faster, Talk Smarter',
+author: 'Matt Abrahams',
 id: 'OL554603W'
 };
 
@@ -105,43 +97,28 @@ statusDiv.innerHTML = `❌ Error: ${error.message}`;
 }
 });
 
-// Fungsi generate gambar transparan (tabel 1-125)
-function generateTransparentImage(doc, x, y, w, h) {
-// Gambar tabel seperti di file csc.png
-doc.setFillColor(240, 240, 240, 0.1); // transparan
-doc.roundedRect(x, y, w, h, 5, 5, 'F');
-doc.setDrawColor(100, 100, 100);
-doc.roundedRect(x, y, w, h, 5, 5, 'S');
-
-// Header tabel
-doc.setFontSize(8);
-doc.setFont('helvetica', 'bold');
-doc.text('Category', x + 20, y + 15);
-doc.text('Value (%)', x + 100, y + 15);
-
-// Garis header
-doc.line(x + 10, y + 20, x + w - 10, y + 20);
-
-// Isi tabel (1-125)
-doc.setFont('helvetica', 'normal');
-doc.setFontSize(6);
-for(let i = 1; i <= 125; i++) {
-let rowY = y + 25 + (i * 8);
-if(rowY > y + h - 15) break;
-doc.text(i.toString(), x + 20, rowY);
-doc.text('100', x + 100, rowY);
+// Fungsi generate baris angka PERSIS seperti contoh
+function generateNumberLine() {
+// Pola: "1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 3 1 1 1 1 1 1 1 1 1 4 ..."
+let line = '';
+for (let i = 1; i <= 154; i++) {
+if (i % 10 === 0) {
+line += (i/10) + ' ';
+} else {
+line += '1 ';
 }
 }
+return line.trim();
+}
 
-// Fungsi generate baris angka (seperti contoh)
-function generateNumberRow() {
-let blok = [];
-for (let i = 0; i < 9; i++) {
-if (i === 5) blok.push('2');
-else blok.push('1'.repeat(17));
-}
-return blok.join(' ');
-}
+// Varian teks promosi (5 varian seperti contoh)
+const promoTexts = [
+"This preview page introduces key concepts discussed throughout the ebook. The full ebook is available by returning to page 1 and clicking download.",
+"This page provides a short overview of ideas explored in the full publication. To continue reading, please return to the first page and download the PDF.",
+"This section highlights themes that are expanded in later chapters. To download the full ebook, please return to page 1 and click the download button.",
+"This preview contains selected information from the original ebook. For access to the complete PDF, go back to page 1 and use the download link.",
+"This page summarizes important ideas presented in the complete book. The full ebook is available by returning to page 1 and clicking download."
+];
 
 // Generate PDF
 document.getElementById('generateBtn').addEventListener('click', async () => {
@@ -150,7 +127,6 @@ const status = document.getElementById('status');
 status.innerHTML = '⏳ Membuat PDF...';
 
 try {
-const totalPages = parseInt(document.getElementById('pageCount').value) || 20;
 const downloadLink = document.getElementById('downloadLink').value;
 const book = currentBook;
 
@@ -164,74 +140,104 @@ const pageWidth = pdf.internal.pageSize.getWidth();
 const pageHeight = pdf.internal.pageSize.getHeight();
 const leftMargin = 50;
 
-// Halaman 1: COVER
+// ===== HALAMAN 1: COVER =====
+pdf.setFillColor(255, 255, 255);
+pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+// Format **!Download** Judul Buku by Penulis.pdf
+pdf.setFont('helvetica', 'bold');
+pdf.setFontSize(16);
+pdf.setTextColor(0, 0, 0);
+pdf.text(`**!Download** ${book.title} by ${book.author}.pdf`, leftMargin, 80);
+
+// Deskripsi download
+pdf.setFont('helvetica', 'normal');
+pdf.setFontSize(12);
+let yPos = 120;
+const descLines = [
+`Download or Read Online ${book.title} free ebook (PDF ePub Mobi) - ${book.author}`,
+``,
+`Ebook PDF ${book.title} | EBOOK ONLINE DOWNLOAD`,
+`If you want to download free Ebook, you are in the right place to download Ebook.`,
+`Ebook/PDF ${book.title} DOWNLOAD in English is available for free here.`,
+`Click on the download LINK below to download Ebook ${book.title} PDF Download by ${book.author} (Author).`
+];
+
+descLines.forEach(line => {
+pdf.text(line, leftMargin, yPos);
+yPos += 20;
+});
+
+// Tombol download (link)
+const btnX = (pageWidth - 280) / 2;
+const btnY = 500;
 pdf.setFillColor(16, 32, 96);
-pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+pdf.roundedRect(btnX, btnY, 280, 52, 10, 10, 'F');
 pdf.setTextColor(255, 255, 255);
-pdf.setFont('times', 'bold');
-pdf.setFontSize(24);
-pdf.text(book.title, pageWidth/2, 200, { align: 'center' });
-pdf.setFontSize(18);
-pdf.text(`by ${book.author}`, pageWidth/2, 250, { align: 'center' });
-pdf.setFontSize(12);
-pdf.text('FREE EBOOK DOWNLOAD', pageWidth/2, 350, { align: 'center' });
-pdf.setTextColor(255, 255, 255);
-
-// Halaman 2-9: GAMBAR TRANSPARAN (tabel 1-125)
-for(let page = 2; page <= 9; page++) {
-pdf.addPage();
-
-// Background putih
-pdf.setFillColor(255, 255, 255);
-pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-
-// Gambar tabel transparan di tengah
-generateTransparentImage(pdf, 50, 100, 400, 600);
-
-// Tambah teks transparan
-pdf.setGState(new pdf.GState({ opacity: 0.3 }));
+pdf.setFontSize(16);
 pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(60);
-pdf.setTextColor(200, 200, 200);
-pdf.text('SAMPLE', pageWidth/2, pageHeight/2, { align: 'center', angle: 45 });
-pdf.setGState(new pdf.GState({ opacity: 1 }));
-}
+pdf.text('DOWNLOAD PDF', pageWidth/2, btnY + 32, { align: 'center' });
+pdf.link(btnX, btnY, 280, 52, { url: downloadLink });
 
-// Halaman 10: TEKS KEMBALI
-pdf.addPage();
-pdf.setFillColor(255, 255, 255);
-pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-pdf.setFont('helvetica', 'bold');
-pdf.setFontSize(20);
-pdf.setTextColor(200, 80, 0);
-pdf.text('Kembali ke halaman pertama', pageWidth/2, pageHeight/2 - 40, { align: 'center' });
-pdf.setFontSize(14);
-pdf.setTextColor(0, 0, 200);
-pdf.text(downloadLink, pageWidth/2, pageHeight/2, { align: 'center' });
-pdf.setFontSize(12);
-pdf.setTextColor(100, 100, 100);
-pdf.text('dan klik link di atas untuk mendownload ebook lengkap', pageWidth/2, pageHeight/2 + 40, { align: 'center' });
-
-// Halaman 11 - totalPages: FULL ANGKA
-for(let page = 11; page <= totalPages; page++) {
+// ===== HALAMAN 2-10: FULL ANGKA =====
+for (let page = 2; page <= 10; page++) {
 pdf.addPage();
 pdf.setFillColor(255, 255, 255);
 pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-let yPos = 70;
-for(let row = 0; row < 32; row++) {
+yPos = 50;
 pdf.setFont('courier', 'normal');
-pdf.setFontSize(10);
+pdf.setFontSize(9);
 pdf.setTextColor(80, 80, 80);
-pdf.text(generateNumberRow(), leftMargin, yPos);
-yPos += 22;
+
+// Generate 40 baris angka per halaman
+for (let row = 0; row < 40; row++) {
+pdf.text(generateNumberLine(), leftMargin, yPos);
+yPos += 20;
 }
+}
+
+// ===== HALAMAN 11-20: TEKS PROMOSI (5 VARIAN BERGANTIAN) =====
+for (let page = 11; page <= 20; page++) {
+pdf.addPage();
+pdf.setFillColor(255, 255, 255);
+pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+// Judul buku di atas
+pdf.setFont('helvetica', 'bold');
+pdf.setFontSize(18);
+pdf.setTextColor(0, 0, 0);
+pdf.text(book.title, pageWidth/2, 100, { align: 'center' });
+
+// Teks promosi (bergantian 5 varian)
+const promoIndex = (page - 11) % 5;
+pdf.setFont('helvetica', 'normal');
+pdf.setFontSize(12);
+pdf.setTextColor(60, 60, 60);
+
+// Split teks panjang jadi beberapa baris
+const words = promoTexts[promoIndex].split(' ');
+let line = '';
+let yText = 180;
+for (let i = 0; i < words.length; i++) {
+line += words[i] + ' ';
+if (i % 12 === 11 || i === words.length - 1) {
+pdf.text(line, leftMargin + 20, yText);
+line = '';
+yText += 25;
+}
+}
+
+// Catatan kecil di footer (seperti contoh)
+pdf.setFontSize(10);
+pdf.setTextColor(150, 150, 150);
+pdf.text('Kembali ke halaman pertama dan klik link di atas', pageWidth/2, pageHeight - 50, { align: 'center' });
 }
 
 // Simpan PDF
 const filename = `${book.title.replace(/[^a-z0-9]/gi, '_')}_${book.id}.pdf`;
 pdf.save(filename);
-status.innerHTML = '✅ PDF BERHASIL! Format persis seperti contoh.';
+status.innerHTML = '✅ PDF BERHASIL! Format persis seperti majordome.pdf (20 halaman)';
 
 } catch (error) {
 status.innerHTML = `❌ Error: ${error.message}`;
