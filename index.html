@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 OpenLibrary BULK PDF Generator</title>
+<title>📚 OpenLibrary BULK PDF Generator - dengan Metadata</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
+/* (style sama seperti sebelumnya) */
 * { margin:0; padding:0; box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; }
 body { background:#1a2f3f; display:flex; justify-content:center; padding:20px; }
 .container { max-width:1200px; width:100%; background:white; border-radius:30px; padding:25px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:3px solid #ffaa33; }
@@ -30,27 +31,33 @@ textarea { height:200px; font-family:monospace; }
 .stat-box { flex:1; background:#f0f0f0; padding:15px; border-radius:10px; text-align:center; }
 .stat-number { font-size:24px; font-weight:bold; color:#102060; }
 .image-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; font-size:14px; }
-.bulk-example { background:#2d2d2d; color:#fff; padding:10px; border-radius:8px; font-family:monospace; margin:10px 0; }
+.metadata-info { background:#fff0d4; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ff6600; font-size:14px; }
 </style>
 </head>
 <body>
 <div class="container">
 <h1>📄 OPENLIBRARY BULK PDF GENERATOR</h1>
-<div class="preview-badge">⚡ Generate 100+ PDF Sekaligus</div>
+<div class="preview-badge">⚡ Dengan Metadata Title untuk Google Indexing</div>
 
 <div class="form-panel">
 <div class="image-info">
 <strong>🖼️ KONFIGURASI GAMBAR:</strong><br>
 • Halaman 2: <code>https://opnlibrarypdfgen.pages.dev/image/2.jpg</code> (FIXED)<br>
-• Halaman 3-10: Random dari 4 gambar:<br>
-&nbsp;&nbsp; - 3.jpg, 4.jpg, 5.jpg, 6.jpg<br>
-• Teks footer: <strong>"Return to the first page and click the link above"</strong><br>
-• <strong>PDF TITLE:</strong> <code>*!Download” {judul} by {author}.pdf</code> (untuk indexing Google)
+• Halaman 3-10: Random dari 4 gambar<br>
+• Teks footer: <strong>"Return to the first page and click the link above"</strong>
+</div>
+
+<div class="metadata-info">
+<strong>📄 METADATA PDF UNTUK GOOGLE:</strong><br>
+• Title: <code>**!Download" {judul} by {author}.pdf</code><br>
+• Author: {author}<br>
+• Subject: {judul}<br>
+<small style="color:#666;">Google akan mengindex title ini, bukan nama file</small>
 </div>
 
 <div class="form-group">
 <label>📌 OPENLIBRARY WORK IDS (satu per baris)</label>
-<textarea id="workIds" placeholder="Masukkan Work ID, satu per baris&#10;Contoh:&#10;OL554603W&#10;OL27448W&#10;OL66592W&#10;OL1168083W&#10;OL27515W">OL554603W
+<textarea id="workIds" placeholder="Masukkan Work ID, satu per baris">OL554603W
 OL27448W
 OL66592W
 OL1168083W
@@ -64,7 +71,6 @@ OL27515W</textarea>
 <div class="form-group download-row">
 <label>🔗 LINK DOWNLOAD DEFAULT</label>
 <input type="text" id="downloadLink" value="https://magafiles.com/1863142" placeholder="https://...">
-<small style="color:#666;">Link ini akan digunakan untuk semua PDF</small>
 </div>
 
 <div class="stats">
@@ -164,6 +170,15 @@ const pageHeight = pdf.internal.pageSize.getHeight();
 const leftMargin = 50;
 const centerX = pageWidth / 2;
 
+// ===== SET METADATA PDF (PENTING UNTUK GOOGLE INDEXING) =====
+pdf.setProperties({
+title: `**!Download" ${bookData.title} by ${bookData.author}.pdf`,
+author: bookData.author,
+subject: bookData.title,
+keywords: `${bookData.title}, ebook, pdf, download, ${bookData.author}, free ebook`,
+creator: 'OpenLibrary PDF Generator'
+});
+
 // ===== HALAMAN 1: COVER =====
 pdf.setFillColor(255, 255, 255);
 pdf.rect(0, 0, pageWidth, pageHeight, 'F');
@@ -180,7 +195,7 @@ setTimeout(reject, 3000);
 pdf.addImage(img, 'JPEG', centerX - 100, 40, 200, 300);
 } catch (e) {}
 
-// TITLE UNTUK INDEXING GOOGLE (format persis)
+// Title di halaman (sama dengan metadata)
 const titleText = `**!Download" ${bookData.title} by ${bookData.author}.pdf`;
 pdf.setFont('helvetica', 'bold');
 pdf.setFontSize(16);
@@ -381,7 +396,7 @@ compressionOptions: { level: 6 }
 // Download ZIP
 saveAs(zipBlob, `openlibrary_bulk_${success}_success_${failed}_failed.zip`);
 
-status.innerHTML = `✅ Selesai! ${success} PDF berhasil, ${failed} gagal. ZIP sudah didownload.`;
+status.innerHTML = `✅ Selesai! ${success} PDF berhasil, ${failed} gagal. Metadata title sudah diset untuk Google Indexing.`;
 
 } catch (error) {
 status.innerHTML = `❌ Error: ${error.message}`;
