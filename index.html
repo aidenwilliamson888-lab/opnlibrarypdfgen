@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 OpenLibrary PDF Generator - Fixed & Random Images</title>
+<title>📚 OpenLibrary BULK PDF Generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -10,74 +10,91 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; }
 body { background:#1a2f3f; display:flex; justify-content:center; padding:20px; }
-.container { max-width:1000px; width:100%; background:white; border-radius:30px; padding:25px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:3px solid #ffaa33; }
+.container { max-width:1200px; width:100%; background:white; border-radius:30px; padding:25px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:3px solid #ffaa33; }
 h1 { color:#102060; border-left:10px solid #ffaa33; padding-left:20px; margin-bottom:20px; }
 .preview-badge { background:#ffaa33; color:#000; padding:5px 15px; border-radius:50px; display:inline-block; margin-bottom:20px; font-weight:bold; }
 .form-panel { background:#fff7e8; border-radius:20px; padding:20px; border:3px solid #ffaa33; margin-top:20px; }
 .form-group { margin-bottom:20px; }
 label { display:block; font-weight:bold; color:#1e3b4f; margin-bottom:5px; }
-input, select { width:100%; padding:12px; border:2px solid #ccddee; border-radius:12px; font-size:14px; }
-input:focus { outline:none; border-color:#ffaa33; }
-.workid-row { display:flex; gap:10px; }
-.workid-row button { background:#1e3b4f; color:white; border:none; border-radius:12px; padding:0 20px; font-weight:bold; cursor:pointer; }
+input, select, textarea { width:100%; padding:12px; border:2px solid #ccddee; border-radius:12px; font-size:14px; }
+input:focus, textarea:focus { outline:none; border-color:#ffaa33; }
+textarea { height:200px; font-family:monospace; }
 .download-row { background:#fff0d4; padding:15px; border-radius:12px; border-left:8px solid #ffaa33; }
 .gen-btn { background:#ffaa33; border:none; border-radius:50px; padding:18px; font-size:20px; font-weight:bold; width:100%; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:15px; box-shadow:0 8px 0 #b87d1f; transition:0.1s; margin-top:15px; }
 .gen-btn:active { transform:translateY(5px); box-shadow:0 3px 0 #b87d1f; }
-#status { margin-top:15px; padding:10px; border-radius:10px; background:#e5f0ff; }
-.cover-preview { max-width:150px; margin:10px auto; display:block; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
-.image-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; }
+.gen-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:0 8px 0 #b87d1f; }
+#status { margin-top:15px; padding:10px; border-radius:10px; background:#e5f0ff; max-height:300px; overflow-y:auto; }
+.progress-bar { width:100%; height:30px; background:#f0f0f0; border-radius:15px; margin:10px 0; overflow:hidden; }
+.progress-fill { height:100%; background:#ffaa33; width:0%; transition:width 0.3s; text-align:center; line-height:30px; color:#000; font-weight:bold; }
+.stats { display:flex; gap:20px; margin:10px 0; }
+.stat-box { flex:1; background:#f0f0f0; padding:15px; border-radius:10px; text-align:center; }
+.stat-number { font-size:24px; font-weight:bold; color:#102060; }
+.image-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; font-size:14px; }
+.bulk-example { background:#2d2d2d; color:#fff; padding:10px; border-radius:8px; font-family:monospace; margin:10px 0; }
 </style>
 </head>
 <body>
 <div class="container">
-<h1>📄 OPENLIBRARY PDF GENERATOR</h1>
-<div class="preview-badge">⚡ Fixed Halaman 2 · Random Halaman 3-10</div>
+<h1>📄 OPENLIBRARY BULK PDF GENERATOR</h1>
+<div class="preview-badge">⚡ Generate 100+ PDF Sekaligus</div>
 
 <div class="form-panel">
 <div class="image-info">
 <strong>🖼️ KONFIGURASI GAMBAR:</strong><br>
 • Halaman 2: <code>https://opnlibrarypdfgen.pages.dev/image/2.jpg</code> (FIXED)<br>
 • Halaman 3-10: Random dari 4 gambar:<br>
-&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/3.jpg<br>
-&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/4.jpg<br>
-&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/5.jpg<br>
-&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/6.jpg<br>
-• Teks footer: <strong>"Return to the first page and click the link above"</strong>
+&nbsp;&nbsp; - 3.jpg, 4.jpg, 5.jpg, 6.jpg<br>
+• Teks footer: <strong>"Return to the first page and click the link above"</strong><br>
+• <strong>PDF TITLE:</strong> <code>*!Download” {judul} by {author}.pdf</code> (untuk indexing Google)
 </div>
 
 <div class="form-group">
-<label>📌 OPENLIBRARY WORK ID</label>
-<div class="workid-row">
-<input type="text" id="workId" value="OL554603W" placeholder="contoh: OL554603W">
-<button id="fetchBtn"><i class="fas fa-download"></i> FETCH</button>
+<label>📌 OPENLIBRARY WORK IDS (satu per baris)</label>
+<textarea id="workIds" placeholder="Masukkan Work ID, satu per baris&#10;Contoh:&#10;OL554603W&#10;OL27448W&#10;OL66592W&#10;OL1168083W&#10;OL27515W">OL554603W
+OL27448W
+OL66592W
+OL1168083W
+OL27515W</textarea>
+<div style="display:flex; gap:10px; margin-top:10px;">
+<button id="countBtn" class="gen-btn" style="padding:8px; font-size:14px;">🔢 Hitung ID</button>
+<span id="idCount" style="padding:8px; background:#f0f0f0; border-radius:8px;">0 ID</span>
 </div>
-<div id="bookInfo" style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
-To Sir Phillip, With Love - Julia Quinn
-</div>
-<div id="coverPreview" style="text-align:center; margin-top:10px;"></div>
 </div>
 
 <div class="form-group download-row">
-<label>🔗 LINK DOWNLOAD (ISI MANUAL)</label>
+<label>🔗 LINK DOWNLOAD DEFAULT</label>
 <input type="text" id="downloadLink" value="https://magafiles.com/1863142" placeholder="https://...">
+<small style="color:#666;">Link ini akan digunakan untuk semua PDF</small>
 </div>
 
-<button class="gen-btn" id="generateBtn">
-📦 GENERATE PDF
+<div class="stats">
+<div class="stat-box">
+<div class="stat-number" id="totalStats">0</div>
+<div>Total ID</div>
+</div>
+<div class="stat-box">
+<div class="stat-number" id="successStats">0</div>
+<div>Berhasil</div>
+</div>
+<div class="stat-box">
+<div class="stat-number" id="failedStats">0</div>
+<div>Gagal</div>
+</div>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill">0%</div>
+</div>
+
+<button class="gen-btn" id="generateBulkBtn">
+📦 GENERATE BULK PDF (ZIP)
 </button>
+
 <div id="status"></div>
 </div>
 </div>
 
 <script>
-// Data buku default
-let currentBook = {
-title: 'To Sir Phillip, With Love',
-author: 'Julia Quinn',
-id: 'OL554603W',
-coverUrl: 'https://covers.openlibrary.org/b/id/12389591-L.jpg'
-};
-
 // Daftar gambar untuk halaman 3-10 (random)
 const pageImages = [
 'https://opnlibrarypdfgen.pages.dev/image/3.jpg',
@@ -86,13 +103,16 @@ const pageImages = [
 'https://opnlibrarypdfgen.pages.dev/image/6.jpg'
 ];
 
-// Fetch dari OpenLibrary
-document.getElementById('fetchBtn').addEventListener('click', async () => {
-const workId = document.getElementById('workId').value.trim();
-const statusDiv = document.getElementById('bookInfo');
-const coverPreview = document.getElementById('coverPreview');
-if (!workId) return;
-statusDiv.innerHTML = '⏳ Fetching...';
+// Hitung jumlah ID
+document.getElementById('countBtn').addEventListener('click', () => {
+const textarea = document.getElementById('workIds');
+const ids = textarea.value.split('\n').filter(id => id.trim() !== '');
+document.getElementById('idCount').innerHTML = `${ids.length} ID ditemukan`;
+document.getElementById('totalStats').innerHTML = ids.length;
+});
+
+// Fungsi fetch data dari OpenLibrary
+async function fetchBookData(workId) {
 try {
 const res = await fetch(`https://openlibrary.org/works/${workId}.json`);
 if (!res.ok) throw new Error('Tidak ditemukan');
@@ -114,39 +134,25 @@ coverUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-L.
 }
 } catch (e) {}
 
-currentBook = { 
-title: data.title, 
-author: authorName, 
-id: workId,
-coverUrl: coverUrl
+return {
+success: true,
+title: data.title,
+author: authorName,
+coverUrl: coverUrl,
+workId: workId
 };
-
-statusDiv.innerHTML = `<b>${data.title}</b> - ${authorName}`;
-coverPreview.innerHTML = `<img src="${coverUrl}" class="cover-preview" alt="cover" onerror="this.src='https://covers.openlibrary.org/b/id/12389591-L.jpg'">`;
 } catch (error) {
-statusDiv.innerHTML = `❌ Error: ${error.message}`;
+return {
+success: false,
+workId: workId,
+error: error.message
+};
 }
-});
+}
 
-// Varian teks promosi
-const promoTexts = [
-"This preview page introduces key concepts discussed throughout the ebook. The full ebook is available by returning to page 1 and clicking download.",
-"This page provides a short overview of ideas explored in the full publication. To continue reading, please return to the first page and download the PDF.",
-"This section highlights themes that are expanded in later chapters. To download the full ebook, please return to page 1 and click the download button.",
-"This preview contains selected information from the original ebook. For access to the complete PDF, go back to page 1 and use the download link.",
-"This page summarizes important ideas presented in the complete book. The full ebook is available by returning to page 1 and clicking download."
-];
-
-// Generate PDF
-document.getElementById('generateBtn').addEventListener('click', async () => {
+// Fungsi generate PDF untuk satu buku
+async function generateSinglePDF(bookData, downloadLink) {
 const { jsPDF } = window.jspdf;
-const status = document.getElementById('status');
-status.innerHTML = '⏳ Membuat PDF...';
-
-try {
-const downloadLink = document.getElementById('downloadLink').value;
-const book = currentBook;
-
 const pdf = new jsPDF({
 orientation: 'portrait',
 unit: 'pt',
@@ -165,18 +171,17 @@ pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 try {
 const img = new Image();
 img.crossOrigin = 'Anonymous';
-img.src = book.coverUrl;
+img.src = bookData.coverUrl;
 await new Promise((resolve, reject) => {
 img.onload = resolve;
 img.onerror = reject;
 setTimeout(reject, 3000);
 });
 pdf.addImage(img, 'JPEG', centerX - 100, 40, 200, 300);
-} catch (e) {
-console.log('Gagal load cover, lanjut tanpa cover');
-}
+} catch (e) {}
 
-const titleText = `**!Download** ${book.title} by ${book.author}.pdf`;
+// TITLE UNTUK INDEXING GOOGLE (format persis)
+const titleText = `**!Download" ${bookData.title} by ${bookData.author}.pdf`;
 pdf.setFont('helvetica', 'bold');
 pdf.setFontSize(16);
 pdf.setTextColor(0, 0, 0);
@@ -187,12 +192,12 @@ pdf.setFontSize(12);
 let yPos = 430;
 
 const descLines = [
-`Download or Read Online ${book.title} free ebook (PDF ePub Mobi) - ${book.author}`,
+`Download or Read Online ${bookData.title} free ebook (PDF ePub Mobi) - ${bookData.author}`,
 ``,
-`Ebook PDF ${book.title} | EBOOK ONLINE DOWNLOAD`,
+`Ebook PDF ${bookData.title} | EBOOK ONLINE DOWNLOAD`,
 `If you want to download free Ebook, you are in the right place to download Ebook.`,
-`Ebook/PDF ${book.title} DOWNLOAD in English is available for free here.`,
-`Click on the download LINK below to download Ebook ${book.title} PDF Download by ${book.author} (Author).`
+`Ebook/PDF ${bookData.title} DOWNLOAD in English is available for free here.`,
+`Click on the download LINK below to download Ebook ${bookData.title} PDF Download by ${bookData.author} (Author).`
 ];
 
 descLines.forEach(line => {
@@ -228,12 +233,7 @@ page2Img.onload = resolve;
 page2Img.onerror = reject;
 });
 pdf.addImage(page2Img, 'JPEG', 0, 0, pageWidth, pageHeight);
-} catch (e) {
-console.log('Gagal load gambar halaman 2');
-pdf.setFontSize(20);
-pdf.setTextColor(255, 0, 0);
-pdf.text('GAMBAR HALAMAN 2 TIDAK DAPAT DILOAD', centerX, pageHeight/2, { align: 'center' });
-}
+} catch (e) {}
 
 // ===== HALAMAN 3-10: GAMBAR RANDOM =====
 for (let page = 3; page <= 10; page++) {
@@ -241,7 +241,6 @@ pdf.addPage();
 pdf.setFillColor(255, 255, 255);
 pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-// Pilih gambar random dari daftar
 const randomImage = pageImages[Math.floor(Math.random() * pageImages.length)];
 
 try {
@@ -253,15 +252,18 @@ pageImg.onload = resolve;
 pageImg.onerror = reject;
 });
 pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidth, pageHeight);
-} catch (e) {
-console.log(`Gagal load gambar halaman ${page}`);
-pdf.setFontSize(16);
-pdf.setTextColor(255, 0, 0);
-pdf.text(`GAMBAR HALAMAN ${page} TIDAK DAPAT DILOAD`, centerX, pageHeight/2, { align: 'center' });
-}
+} catch (e) {}
 }
 
 // ===== HALAMAN 11-20: TEKS PROMOSI =====
+const promoTexts = [
+"This preview page introduces key concepts discussed throughout the ebook. The full ebook is available by returning to page 1 and clicking download.",
+"This page provides a short overview of ideas explored in the full publication. To continue reading, please return to the first page and download the PDF.",
+"This section highlights themes that are expanded in later chapters. To download the full ebook, please return to page 1 and click the download button.",
+"This preview contains selected information from the original ebook. For access to the complete PDF, go back to page 1 and use the download link.",
+"This page summarizes important ideas presented in the complete book. The full ebook is available by returning to page 1 and clicking download."
+];
+
 for (let page = 11; page <= 20; page++) {
 pdf.addPage();
 pdf.setFillColor(255, 255, 255);
@@ -270,7 +272,7 @@ pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 pdf.setFont('helvetica', 'bold');
 pdf.setFontSize(18);
 pdf.setTextColor(0, 0, 0);
-pdf.text(book.title, centerX, 100, { align: 'center' });
+pdf.text(bookData.title, centerX, 100, { align: 'center' });
 
 const promoIndex = (page - 11) % 5;
 pdf.setFont('helvetica', 'normal');
@@ -289,24 +291,112 @@ yText += 25;
 }
 }
 
-// Teks footer BAHASA INGGRIS
 pdf.setFontSize(10);
 pdf.setTextColor(150, 150, 150);
 pdf.text('Return to the first page and click the link above', centerX, pageHeight - 50, { align: 'center' });
 }
 
-const filename = `${book.title.replace(/[^a-z0-9]/gi, '_')}_${book.id}.pdf`;
-pdf.save(filename);
-status.innerHTML = '✅ PDF BERHASIL! Halaman 2 fixed, halaman 3-10 random';
+return pdf.output('blob');
+}
+
+// Fungsi slugify untuk nama file
+function slugify(text) {
+return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+.toLowerCase()
+.replace(/[^a-z0-9]+/g, '-')
+.replace(/^-+|-+$/g, '');
+}
+
+// Bulk Generate
+document.getElementById('generateBulkBtn').addEventListener('click', async () => {
+const button = document.getElementById('generateBulkBtn');
+const status = document.getElementById('status');
+const progressFill = document.getElementById('progressFill');
+const totalStats = document.getElementById('totalStats');
+const successStats = document.getElementById('successStats');
+const failedStats = document.getElementById('failedStats');
+
+button.disabled = true;
+status.innerHTML = '⏳ Memulai proses...';
+
+try {
+const workIds = document.getElementById('workIds').value.split('\n').filter(id => id.trim() !== '');
+const downloadLink = document.getElementById('downloadLink').value;
+
+totalStats.innerHTML = workIds.length;
+successStats.innerHTML = '0';
+failedStats.innerHTML = '0';
+progressFill.style.width = '0%';
+progressFill.innerHTML = '0%';
+
+const zip = new JSZip();
+let success = 0;
+let failed = 0;
+
+for (let i = 0; i < workIds.length; i++) {
+const workId = workIds[i].trim();
+if (!workId) continue;
+
+status.innerHTML = `⏳ Memproses ${i+1}/${workIds.length}: ${workId}`;
+
+// Fetch data dari OpenLibrary
+const bookData = await fetchBookData(workId);
+
+if (bookData.success) {
+try {
+// Generate PDF
+const pdfBlob = await generateSinglePDF(bookData, downloadLink);
+
+// Nama file: slugify(title)_workId.pdf
+const filename = `${slugify(bookData.title)}_${workId}.pdf`;
+zip.file(filename, pdfBlob);
+
+success++;
+successStats.innerHTML = success;
+} catch (e) {
+console.error(e);
+failed++;
+failedStats.innerHTML = failed;
+}
+} else {
+failed++;
+failedStats.innerHTML = failed;
+}
+
+// Update progress
+const percent = Math.round(((i + 1) / workIds.length) * 100);
+progressFill.style.width = percent + '%';
+progressFill.innerHTML = percent + '%';
+}
+
+status.innerHTML = '⏳ Membuat file ZIP...';
+
+// Generate ZIP
+const zipBlob = await zip.generateAsync({ 
+type: 'blob',
+compression: 'DEFLATE',
+compressionOptions: { level: 6 }
+});
+
+// Download ZIP
+saveAs(zipBlob, `openlibrary_bulk_${success}_success_${failed}_failed.zip`);
+
+status.innerHTML = `✅ Selesai! ${success} PDF berhasil, ${failed} gagal. ZIP sudah didownload.`;
 
 } catch (error) {
 status.innerHTML = `❌ Error: ${error.message}`;
 console.error(error);
+} finally {
+button.disabled = false;
 }
 });
 
+// Auto count on page load
 window.addEventListener('load', () => {
-document.getElementById('fetchBtn').click();
+const textarea = document.getElementById('workIds');
+const ids = textarea.value.split('\n').filter(id => id.trim() !== '');
+document.getElementById('idCount').innerHTML = `${ids.length} ID ditemukan`;
+document.getElementById('totalStats').innerHTML = ids.length;
 });
 </script>
 </body>
