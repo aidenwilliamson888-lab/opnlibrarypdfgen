@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 IMmedia PDF Generator + OpenLibrary</title>
+<title>📚 IMmedia PDF Generator + OpenLibrary (Opsional)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -36,12 +36,6 @@ h1{
   margin-bottom:20px;
   color:#102060;
   font-size:28px;
-}
-h1 small {
-  font-size: 14px;
-  color: #ff6600;
-  display: block;
-  margin-top: 5px;
 }
 
 /* ===== TABLE ===== */
@@ -105,23 +99,24 @@ select{
   box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
 
-/* ===== FETCH BUTTON ===== */
-.fetch-btn {
+/* ===== OPENLIBRARY BUTTON ===== */
+.ol-btn {
   margin-top: 5px;
   padding: 4px 8px;
-  background: #ffaa33;
-  color: #000;
+  background: #f5b342;
+  color: #1e3b4f;
   border: none;
   border-radius: 4px;
   font-size: 11px;
   font-weight: bold;
   cursor: pointer;
   width: 100%;
+  border-bottom: 2px solid #b87d1f;
 }
-.fetch-btn:hover {
-  background: #ff9900;
+.ol-btn:hover {
+  background: #ffaa33;
 }
-.status-fetch {
+.ol-status {
   font-size: 10px;
   margin-top: 3px;
   color: #008800;
@@ -172,7 +167,7 @@ button:active{
 
 <body>
 <div class="container">
-<h1>📚 IMmedia PDF Generator <small>+ OpenLibrary Integration · ASIN/Work ID auto-fill</small></h1>
+<h1>📚 IMmedia PDF Generator <span style="font-size:14px; color:#ff6600; display:block;">+ OpenLibrary (opsional, klik tombol kuning)</span></h1>
 
 <table>
 <thead>
@@ -183,7 +178,7 @@ button:active{
 <th>AUTHOR</th>
 <th>DOWNLOAD LINK</th>
 <th>LANG</th>
-<th>ASIN/Work ID</th>
+<th>ASIN</th>
 <th>Preview</th>
 </tr>
 </thead>
@@ -195,6 +190,7 @@ button:active{
 </div>
 
 <script>
+// ===== SCRIPT BAWAAN (TIDAK DIUBAH) =====
 const rows=document.getElementById('rows');
 addRow();
 
@@ -206,49 +202,6 @@ async function loadJapaneseFont(){
   const b=await r.arrayBuffer();
   JP_FONT=btoa([...new Uint8Array(b)].map(x=>String.fromCharCode(x)).join(''));
   return JP_FONT;
-}
-
-/* ===== OPENLIBRARY FETCH FUNCTION ===== */
-async function fetchFromOpenLibrary(asin, row) {
-  const statusSpan = row.querySelector('.fetch-status') || document.createElement('span');
-  statusSpan.className = 'status-fetch';
-  statusSpan.innerHTML = '⏳ Fetching...';
-  row.querySelector('td:nth-child(7)').appendChild(statusSpan);
-  
-  try {
-    // Coba cari di OpenLibrary dengan ASIN/Work ID
-    let workId = asin;
-    let data = null;
-    
-    // Coba search dulu
-    const searchRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(asin)}&limit=1`);
-    const searchData = await searchRes.json();
-    
-    if (searchData.docs && searchData.docs.length > 0) {
-      const doc = searchData.docs[0];
-      const title = doc.title;
-      const author = doc.author_name ? doc.author_name[0] : 'Unknown';
-      const coverId = doc.cover_i;
-      
-      // Update fields
-      row.querySelector('.pdf').value = title;
-      row.querySelector('.title').value = title;
-      row.querySelector('.author').value = author;
-      
-      // Update preview gambar
-      if (coverId) {
-        row.querySelector('img').src = `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
-      }
-      
-      statusSpan.innerHTML = '✅ OpenLibrary OK';
-      setTimeout(() => statusSpan.remove(), 3000);
-    } else {
-      statusSpan.innerHTML = '❌ Not found';
-    }
-  } catch (error) {
-    console.error(error);
-    statusSpan.innerHTML = '❌ Error';
-  }
 }
 
 /* ===== CTA BUTTON TEXT ===== */
@@ -443,15 +396,15 @@ c.getContext('2d').drawImage(i,0,0);
 return c.toDataURL('image/jpeg',0.55);
 }
 
-/* ===== UI ===== */
+/* ===== UI (BAWAAN) ===== */
 function addRow(){
 const tr=document.createElement('tr');
 tr.innerHTML=`
-<td><input class="out" placeholder="filename (optional)"></td>
-<td><input class="pdf" placeholder="Title in PDF"></td>
-<td><input class="title" placeholder="Book title"></td>
-<td><input class="author" placeholder="Author"></td>
-<td><input class="link" placeholder="https://..." value="https://magafiles.com/1863142"></td>
+<td><input class="out"></td>
+<td><input class="pdf"></td>
+<td><input class="title"></td>
+<td><input class="author"></td>
+<td><input class="link"></td>
 <td>
 <select class="lang">
 <option value="en">EN</option><option value="es">ES</option>
@@ -460,50 +413,122 @@ tr.innerHTML=`
 <option value="ja">JA</option><option value="ar">AR</option>
 </select></td>
 <td>
-<input class="asin" placeholder="ASIN or Work ID" oninput="preview(this)">
-<button class="fetch-btn" onclick="fetchFromOpenLibrary(this.closest('tr').querySelector('.asin').value, this.closest('tr'))">🔍 Fetch from OpenLibrary</button>
+<input class="asin" oninput="preview(this)">
+<button class="ol-btn" onclick="fetchOpenLibrary(this)">📖 Ambil dari OpenLibrary</button>
+<div class="ol-status" style="font-size:10px; margin-top:2px;"></div>
 </td>
 <td class="preview"><img></td>`;
 rows.appendChild(tr);
 }
 
 function preview(el){
-const val = el.value;
-if (val) {
-  el.closest('tr').querySelector('img').src =
-  `https://images-na.ssl-images-amazon.com/images/P/${val}.01.LZZZZZZZ.jpg`;
-}
+el.closest('tr').querySelector('img').src=
+`https://images-na.ssl-images-amazon.com/images/P/${el.value}.01.LZZZZZZZ.jpg`;
 }
 
-/* ===== PDF ===== */
+// ===== FITUR BARU: OPENLIBRARY (TAMBAHAN, TIDAK MENGUBAH BAWAAN) =====
+async function fetchOpenLibrary(btn) {
+  const tr = btn.closest('tr');
+  const asinInput = tr.querySelector('.asin');
+  const statusDiv = tr.querySelector('.ol-status');
+  const titleInput = tr.querySelector('.title');
+  const authorInput = tr.querySelector('.author');
+  const pdfTitleInput = tr.querySelector('.pdf');
+  
+  const workId = asinInput.value.trim();
+  if (!workId) {
+    statusDiv.innerHTML = '❌ Masukkan ASIN/Work ID';
+    return;
+  }
+  
+  statusDiv.innerHTML = '⏳ Mencari di OpenLibrary...';
+  
+  try {
+    // Coba cari berdasarkan Work ID langsung
+    let found = false;
+    
+    // Coba fetch work
+    const workRes = await fetch(`https://openlibrary.org/works/${workId}.json`);
+    if (workRes.ok) {
+      const work = await workRes.json();
+      titleInput.value = work.title || '';
+      pdfTitleInput.value = work.title || '';
+      
+      // Cari author
+      if (work.authors && work.authors[0]) {
+        const authorKey = work.authors[0].author.key;
+        const authorRes = await fetch(`https://openlibrary.org${authorKey}.json`);
+        const authorData = await authorRes.json();
+        authorInput.value = authorData.name || '';
+      }
+      
+      // Cari cover
+      const searchRes = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(work.title)}&limit=1`);
+      const searchData = await searchRes.json();
+      if (searchData.docs && searchData.docs[0] && searchData.docs[0].cover_i) {
+        tr.querySelector('img').src = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-L.jpg`;
+      }
+      
+      found = true;
+      statusDiv.innerHTML = '✅ Berhasil ambil dari OpenLibrary';
+    } else {
+      // Coba cari via search
+      const searchRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(workId)}&limit=1`);
+      const searchData = await searchRes.json();
+      
+      if (searchData.docs && searchData.docs.length > 0) {
+        const doc = searchData.docs[0];
+        titleInput.value = doc.title || '';
+        pdfTitleInput.value = doc.title || '';
+        authorInput.value = doc.author_name ? doc.author_name[0] : '';
+        
+        if (doc.cover_i) {
+          tr.querySelector('img').src = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
+        }
+        
+        found = true;
+        statusDiv.innerHTML = '✅ Berhasil ambil dari OpenLibrary';
+      }
+    }
+    
+    if (!found) {
+      statusDiv.innerHTML = '❌ Tidak ditemukan di OpenLibrary';
+    }
+    
+    // Hapus status setelah 3 detik
+    setTimeout(() => {
+      statusDiv.innerHTML = '';
+    }, 3000);
+    
+  } catch (error) {
+    console.error(error);
+    statusDiv.innerHTML = '❌ Error fetch OpenLibrary';
+    setTimeout(() => {
+      statusDiv.innerHTML = '';
+    }, 3000);
+  }
+}
+
+/* ===== PDF (BAWAAN, TIDAK DIUBAH) ===== */
 async function buildPDF(d){
 const {jsPDF}=window.jspdf;
 const doc=new jsPDF({unit:'pt',format:'a4',compress:true,putOnlyUsedFonts:true});
 const W=595,H=842;
 
 doc.setProperties({
-  title:d.title_pdf || d.title_book,
+  title:d.title_pdf,
   author:d.author,
   subject:d.title_book,
   keywords:(SEO_KEYWORDS[d.lang]||SEO_KEYWORDS.en)(d.title_book,d.author)
 });
 
-// Cover image
-try {
-  const cover=new Image();
-  cover.src=`https://images-na.ssl-images-amazon.com/images/P/${d.asin}.01.LZZZZZZZ.jpg`;
-  await new Promise((resolve, reject) => {
-    cover.onload = resolve;
-    cover.onerror = reject;
-    setTimeout(reject, 3000);
-  });
-  doc.addImage(cover,'JPEG',(W-220)/2,40,220,330);
-} catch (e) {
-  console.log('Cover not loaded, skipping');
-}
+const cover=new Image();
+cover.src=`https://images-na.ssl-images-amazon.com/images/P/${d.asin}.01.LZZZZZZZ.jpg`;
+await new Promise(r=>cover.onload=r);
+doc.addImage(cover,'JPEG',(W-220)/2,40,220,330);
 
 doc.setFont('times','bold');doc.setFontSize(18);
-doc.text(d.title_pdf || d.title_book,W/2,410,{align:'center'});
+doc.text(d.title_pdf,W/2,410,{align:'center'});
 
 if(d.lang==='ja'){
   const f=await loadJapaneseFont();
@@ -513,14 +538,13 @@ if(d.lang==='ja'){
 }else doc.setFont('times','normal');
 
 doc.setFontSize(12);
-const trans = TRANSLATIONS[d.lang] || TRANSLATIONS.en;
-doc.text(trans({t:d.title_book,a:d.author}),W/2,460,{align:'center',maxWidth:420});
+doc.text(TRANSLATIONS[d.lang]({t:d.title_book,a:d.author}),W/2,460,{align:'center',maxWidth:420});
 
 const x=(W-280)/2,y=685;
 doc.setFillColor(16,32,96);
 doc.roundedRect(x,y,280,52,10,10,'F');
 doc.setTextColor(255,255,255);doc.setFontSize(16);
-doc.text(CTA_TEXT[d.lang] || CTA_TEXT.en,W/2,y+32,{align:'center'});
+doc.text(CTA_TEXT[d.lang],W/2,y+32,{align:'center'});
 doc.link(x,y,280,52,{url:d.link});
 doc.setTextColor(0,0,0);
 
@@ -528,23 +552,10 @@ const total=Math.random()>0.5?21:20;
 for(let i=1;i<total;i++){
 doc.addPage();
 if(i<10){
-  // Gunakan placeholder pattern (angka 1 1 1...)
-  doc.setFont('courier','normal');
-  doc.setFontSize(8);
-  let yPos = 30;
-  for(let row=0; row<40; row++) {
-    let line = '';
-    for(let col=0; col<10; col++) {
-      line += '11111111111111111 ';
-    }
-    doc.text(line, 20, yPos);
-    yPos += 15;
-  }
+  doc.addImage(await loadImg(`previews/p${(i%4)+1}.jpg`),'JPEG',0,0,W,H);
 }else{
   const tv=TEXT_VARIANTS[d.lang]||TEXT_VARIANTS.en;
   const cv=CTA_VARIANTS[d.lang]||CTA_VARIANTS.en;
-  doc.setFont('times','normal');
-  doc.setFontSize(14);
   doc.text(
     `${d.title_book}\n\n${tv[i%tv.length]}\n\n${cv[i%cv.length]}`,
     40,80,{maxWidth:520}
@@ -553,7 +564,7 @@ if(i<10){
 return doc.output('blob');
 }
 
-/* ===== ZIP ===== */
+/* ===== ZIP (BAWAAN) ===== */
 async function generateZIP(){
 const zip=new JSZip();
 for(const tr of rows.querySelectorAll('tr')){
@@ -567,7 +578,7 @@ lang:tr.querySelector('.lang').value,
 asin:tr.querySelector('.asin').value
 };
 if(!d.asin)continue;
-const name=d.lang==='ja'?`${d.asin}.pdf`:`${slugify(d.output||d.title_book||d.asin)}.pdf`;
+const name=d.lang==='ja'?`${d.asin}.pdf`:`${slugify(d.output||d.title_book)}.pdf`;
 zip.file(name,await buildPDF(d));
 }
 saveAs(await zip.generateAsync({type:'blob'}),'bulk-pdfs.zip');
