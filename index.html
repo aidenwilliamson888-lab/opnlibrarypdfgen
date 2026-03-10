@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 OpenLibrary PDF Generator - Gambar Siap</title>
+<title>📚 OpenLibrary PDF Generator - Fixed & Random Images</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -25,29 +25,24 @@ input:focus { outline:none; border-color:#ffaa33; }
 .gen-btn:active { transform:translateY(5px); box-shadow:0 3px 0 #b87d1f; }
 #status { margin-top:15px; padding:10px; border-radius:10px; background:#e5f0ff; }
 .cover-preview { max-width:150px; margin:10px auto; display:block; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
-.image-url-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; }
-.test-btn { background:#4CAF50; color:white; border:none; border-radius:4px; padding:5px 10px; margin-left:10px; cursor:pointer; font-size:12px; }
+.image-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; }
 </style>
 </head>
 <body>
 <div class="container">
 <h1>📄 OPENLIBRARY PDF GENERATOR</h1>
-<div class="preview-badge">⚡ Gambar Siap Pakai</div>
+<div class="preview-badge">⚡ Fixed Halaman 2 · Random Halaman 3-10</div>
 
 <div class="form-panel">
-<div class="image-url-info">
-<strong>🖼️ GAMBAR UNTUK HALAMAN 2:</strong><br>
-<select id="imageSelect" style="width:100%; margin:10px 0; padding:8px;">
-<option value="https://picsum.photos/800/1000?random=1">Random Image 1 (Placeholder)</option>
-<option value="https://picsum.photos/800/1000?random=2">Random Image 2 (Placeholder)</option>
-<option value="https://picsum.photos/800/1000?random=3">Random Image 3 (Placeholder)</option>
-<option value="custom">Custom URL</option>
-</select>
-<div id="customUrlContainer" style="display:none; margin-top:10px;">
-<input type="text" id="customImageUrl" placeholder="https://...">
-<button class="test-btn" id="testImageBtn">Test Load</button>
-</div>
-<div id="imageTestResult" style="font-size:12px; margin-top:5px;"></div>
+<div class="image-info">
+<strong>🖼️ KONFIGURASI GAMBAR:</strong><br>
+• Halaman 2: <code>https://opnlibrarypdfgen.pages.dev/image/2.jpg</code> (FIXED)<br>
+• Halaman 3-10: Random dari 4 gambar:<br>
+&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/3.jpg<br>
+&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/4.jpg<br>
+&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/5.jpg<br>
+&nbsp;&nbsp; - https://opnlibrarypdfgen.pages.dev/image/6.jpg<br>
+• Teks footer: <strong>"Return to the first page and click the link above"</strong>
 </div>
 
 <div class="form-group">
@@ -83,26 +78,13 @@ id: 'OL554603W',
 coverUrl: 'https://covers.openlibrary.org/b/id/12389591-L.jpg'
 };
 
-// Handle image select
-document.getElementById('imageSelect').addEventListener('change', function() {
-if (this.value === 'custom') {
-document.getElementById('customUrlContainer').style.display = 'block';
-} else {
-document.getElementById('customUrlContainer').style.display = 'none';
-}
-});
-
-// Test image load
-document.getElementById('testImageBtn').addEventListener('click', function() {
-const url = document.getElementById('customImageUrl').value;
-const resultDiv = document.getElementById('imageTestResult');
-resultDiv.innerHTML = '⏳ Testing...';
-const img = new Image();
-img.crossOrigin = 'Anonymous';
-img.onload = () => resultDiv.innerHTML = '✅ Gambar bisa diload!';
-img.onerror = () => resultDiv.innerHTML = '❌ Gambar gagal diload, cek URL';
-img.src = url;
-});
+// Daftar gambar untuk halaman 3-10 (random)
+const pageImages = [
+'https://opnlibrarypdfgen.pages.dev/image/3.jpg',
+'https://opnlibrarypdfgen.pages.dev/image/4.jpg',
+'https://opnlibrarypdfgen.pages.dev/image/5.jpg',
+'https://opnlibrarypdfgen.pages.dev/image/6.jpg'
+];
 
 // Fetch dari OpenLibrary
 document.getElementById('fetchBtn').addEventListener('click', async () => {
@@ -146,19 +128,6 @@ statusDiv.innerHTML = `❌ Error: ${error.message}`;
 }
 });
 
-// Fungsi generate baris angka
-function generateNumberLine() {
-let line = '';
-for (let i = 1; i <= 154; i++) {
-if (i % 10 === 0) {
-line += (i/10) + ' ';
-} else {
-line += '1 ';
-}
-}
-return line.trim();
-}
-
 // Varian teks promosi
 const promoTexts = [
 "This preview page introduces key concepts discussed throughout the ebook. The full ebook is available by returning to page 1 and clicking download.",
@@ -176,9 +145,6 @@ status.innerHTML = '⏳ Membuat PDF...';
 
 try {
 const downloadLink = document.getElementById('downloadLink').value;
-const imageSelect = document.getElementById('imageSelect').value;
-const customUrl = document.getElementById('customImageUrl').value;
-const imageUrl = imageSelect === 'custom' ? customUrl : imageSelect;
 const book = currentBook;
 
 const pdf = new jsPDF({
@@ -248,47 +214,50 @@ pdf.setFont('helvetica', 'bold');
 pdf.text('DOWNLOAD PDF', centerX, btnY + 32, { align: 'center' });
 pdf.link(btnX, btnY, 280, 52, { url: downloadLink });
 
-// ===== HALAMAN 2: GAMBAR DARI HOSTING =====
+// ===== HALAMAN 2: GAMBAR FIXED =====
 pdf.addPage();
 pdf.setFillColor(255, 255, 255);
 pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-if (imageUrl) {
 try {
 const page2Img = new Image();
 page2Img.crossOrigin = 'Anonymous';
-page2Img.src = imageUrl;
+page2Img.src = 'https://opnlibrarypdfgen.pages.dev/image/2.jpg';
 await new Promise((resolve, reject) => {
 page2Img.onload = resolve;
 page2Img.onerror = reject;
 });
 pdf.addImage(page2Img, 'JPEG', 0, 0, pageWidth, pageHeight);
-status.innerHTML = '✅ Gambar halaman 2 sukses diload';
 } catch (e) {
 console.log('Gagal load gambar halaman 2');
 pdf.setFontSize(20);
 pdf.setTextColor(255, 0, 0);
-pdf.text('GAMBAR TIDAK DAPAT DILOAD', centerX, pageHeight/2, { align: 'center' });
-pdf.setFontSize(12);
-pdf.setTextColor(0, 0, 255);
-pdf.text('Cek URL gambar Anda', centerX, pageHeight/2 + 30, { align: 'center' });
-}
+pdf.text('GAMBAR HALAMAN 2 TIDAK DAPAT DILOAD', centerX, pageHeight/2, { align: 'center' });
 }
 
-// ===== HALAMAN 3-10: FULL ANGKA =====
+// ===== HALAMAN 3-10: GAMBAR RANDOM =====
 for (let page = 3; page <= 10; page++) {
 pdf.addPage();
 pdf.setFillColor(255, 255, 255);
 pdf.rect(0, 0, pageWidth, pageHeight, 'F');
 
-let yPos = 50;
-pdf.setFont('courier', 'normal');
-pdf.setFontSize(9);
-pdf.setTextColor(80, 80, 80);
+// Pilih gambar random dari daftar
+const randomImage = pageImages[Math.floor(Math.random() * pageImages.length)];
 
-for (let row = 0; row < 40; row++) {
-pdf.text(generateNumberLine(), leftMargin, yPos);
-yPos += 20;
+try {
+const pageImg = new Image();
+pageImg.crossOrigin = 'Anonymous';
+pageImg.src = randomImage;
+await new Promise((resolve, reject) => {
+pageImg.onload = resolve;
+pageImg.onerror = reject;
+});
+pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidth, pageHeight);
+} catch (e) {
+console.log(`Gagal load gambar halaman ${page}`);
+pdf.setFontSize(16);
+pdf.setTextColor(255, 0, 0);
+pdf.text(`GAMBAR HALAMAN ${page} TIDAK DAPAT DILOAD`, centerX, pageHeight/2, { align: 'center' });
 }
 }
 
@@ -320,14 +289,15 @@ yText += 25;
 }
 }
 
+// Teks footer BAHASA INGGRIS
 pdf.setFontSize(10);
 pdf.setTextColor(150, 150, 150);
-pdf.text('Kembali ke halaman pertama dan klik link di atas', centerX, pageHeight - 50, { align: 'center' });
+pdf.text('Return to the first page and click the link above', centerX, pageHeight - 50, { align: 'center' });
 }
 
 const filename = `${book.title.replace(/[^a-z0-9]/gi, '_')}_${book.id}.pdf`;
 pdf.save(filename);
-status.innerHTML = '✅ PDF BERHASIL!';
+status.innerHTML = '✅ PDF BERHASIL! Halaman 2 fixed, halaman 3-10 random';
 
 } catch (error) {
 status.innerHTML = `❌ Error: ${error.message}`;
