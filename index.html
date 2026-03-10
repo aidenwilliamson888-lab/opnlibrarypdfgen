@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>📚 OpenLibrary PDF Generator - Custom Domain</title>
+<title>📚 OpenLibrary PDF Generator - Final</title>
 <!-- jsPDF & JSZip -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -18,8 +18,6 @@ body { background:linear-gradient(145deg, #0b1f2c 0%, #1a3440 100%); min-height:
 .header h1 { color:white; font-size:2.5rem; font-weight:800; margin-bottom:10px; }
 .header p { color:#ffaa33; font-size:1.2rem; }
 .content { padding:30px; }
-
-/* ===== FORM STYLES ===== */
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; }
 .form-section { background:#f8faff; padding:25px; border-radius:25px; border:2px solid #e0e8f0; }
 .form-section h2 { color:#0b1f2c; margin-bottom:20px; font-size:1.5rem; border-left:8px solid #ffaa33; padding-left:15px; }
@@ -50,8 +48,6 @@ textarea { height:150px; font-family:monospace; }
 #status { margin-top:20px; padding:15px; border-radius:12px; background:#e5f0ff; max-height:200px; overflow-y:auto; }
 .footer { background:#0b1f2c; padding:20px; color:#8ba0b0; text-align:center; border-top:2px solid #ffaa33; }
 .footer a { color:#ffaa33; text-decoration:none; }
-
-/* ===== MOBILE ===== */
 @media (max-width:800px) {
 .form-grid { grid-template-columns:1fr; }
 .header h1 { font-size:2rem; }
@@ -178,7 +174,7 @@ const bookPreview = document.getElementById('bookPreview');
 
 // ===== UPDATE PREVIEW DOMAIN =====
 function updateDomainPreview() {
-const domain = domainInput.value.trim().replace(/\/$/, '') + '/'; // pastikan ada slash di akhir
+const domain = domainInput.value.trim().replace(/\/$/, '') + '/';
 const workIds = workIdsTextarea.value.split('\n').filter(id => id.trim() !== '');
 const firstId = workIds[0] || 'OL554603W';
 const previewSpan = document.querySelector('#domainPreview span');
@@ -187,7 +183,6 @@ if (previewSpan) previewSpan.textContent = domain + firstId;
 if (previewLinkSpan) previewLinkSpan.textContent = domain + firstId;
 }
 
-// Event listeners
 workIdsTextarea.addEventListener('input', updateDomainPreview);
 domainInput.addEventListener('input', updateDomainPreview);
 
@@ -267,7 +262,7 @@ const centerX = pageWidth / 2;
 
 // SET METADATA
 pdf.setProperties({
-title: `**!Download" ${bookData.title} by ${bookData.author}.pdf`,
+title: `*!Download” ${bookData.title} by ${bookData.author}.pdf`,
 author: bookData.author,
 subject: bookData.title,
 keywords: `${bookData.title}, ebook, pdf, download, ${bookData.author}`,
@@ -292,19 +287,20 @@ pdf.addImage(img, 'JPEG', centerX - 100, 40, 200, 300);
 } catch (e) {}
 
 // Title
-const titleText = `**!Download" ${bookData.title} by ${bookData.author}.pdf`;
+const titleText = `*!Download” ${bookData.title} by ${bookData.author}.pdf`;
 pdf.setFont('helvetica', 'bold');
 pdf.setFontSize(16);
 pdf.setTextColor(0, 0, 0);
-pdf.text(titleText, centerX, 380, { align: 'center' });
+pdf.text(titleText, centerX, 380, { align: 'center', maxWidth: 500 });
 
-// Deskripsi
+// ===== DESKRIPSI DIPERKECIL =====
 pdf.setFont('helvetica', 'normal');
-pdf.setFontSize(12);
-let yPos = 430;
+pdf.setFontSize(10); // diperkecil
+pdf.setTextColor(60, 60, 60);
+let yPos = 420;
+
 const descLines = [
 `Download or Read Online ${bookData.title} free ebook (PDF ePub Mobi) - ${bookData.author}`,
-``,
 `Ebook PDF ${bookData.title} | EBOOK ONLINE DOWNLOAD`,
 `If you want to download free Ebook, you are in the right place to download Ebook.`,
 `Ebook/PDF ${bookData.title} DOWNLOAD in English is available for free here.`,
@@ -312,17 +308,34 @@ const descLines = [
 ];
 
 descLines.forEach(line => {
-if (line === '') yPos += 10;
-else {
-pdf.text(line, centerX, yPos, { align: 'center' });
-yPos += 20;
+const maxWidth = 450;
+const words = line.split(' ');
+let currentLine = '';
+let lines = [];
+
+for (let word of words) {
+const testLine = currentLine + (currentLine ? ' ' : '') + word;
+const width = pdf.getTextWidth(testLine);
+if (width < maxWidth) {
+currentLine = testLine;
+} else {
+lines.push(currentLine);
+currentLine = word;
 }
+}
+if (currentLine) lines.push(currentLine);
+
+lines.forEach(l => {
+pdf.text(l, centerX, yPos, { align: 'center' });
+yPos += 14; // spacing lebih kecil
+});
+yPos += 5;
 });
 
-// TOMBOL DOWNLOAD dengan link ke domain + workId
+// TOMBOL DOWNLOAD
 const btnX = (pageWidth - 280) / 2;
-const btnY = 650;
-const downloadUrl = domain.replace(/\/$/, '') + '/' + bookData.workId; // domain + / + workId
+const btnY = 630;
+const downloadUrl = domain.replace(/\/$/, '') + '/' + bookData.workId;
 
 pdf.setFillColor(16, 32, 96);
 pdf.roundedRect(btnX, btnY, 280, 52, 10, 10, 'F');
