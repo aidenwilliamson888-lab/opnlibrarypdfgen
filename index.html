@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📚 OpenLibrary PDF Generator - Gambar dari Hosting</title>
+<title>📚 OpenLibrary PDF Generator - Gambar Siap</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -26,19 +26,28 @@ input:focus { outline:none; border-color:#ffaa33; }
 #status { margin-top:15px; padding:10px; border-radius:10px; background:#e5f0ff; }
 .cover-preview { max-width:150px; margin:10px auto; display:block; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
 .image-url-info { background:#e6f3ff; padding:15px; border-radius:8px; margin:10px 0; border-left:5px solid #ffaa33; }
+.test-btn { background:#4CAF50; color:white; border:none; border-radius:4px; padding:5px 10px; margin-left:10px; cursor:pointer; font-size:12px; }
 </style>
 </head>
 <body>
 <div class="container">
 <h1>📄 OPENLIBRARY PDF GENERATOR</h1>
-<div class="preview-badge">⚡ Gambar dari Hosting External</div>
+<div class="preview-badge">⚡ Gambar Siap Pakai</div>
 
 <div class="form-panel">
 <div class="image-url-info">
 <strong>🖼️ GAMBAR UNTUK HALAMAN 2:</strong><br>
-Menggunakan gambar dari hosting:<br>
-<code style="background:#fff; padding:5px; display:block; margin-top:5px;">https://i.ibb.co/4K7R0cB/HALAMAN-2.jpg</code>
-<small style="color:#666;">(ganti URL sesuai hosting Anda)</small>
+<select id="imageSelect" style="width:100%; margin:10px 0; padding:8px;">
+<option value="https://picsum.photos/800/1000?random=1">Random Image 1 (Placeholder)</option>
+<option value="https://picsum.photos/800/1000?random=2">Random Image 2 (Placeholder)</option>
+<option value="https://picsum.photos/800/1000?random=3">Random Image 3 (Placeholder)</option>
+<option value="custom">Custom URL</option>
+</select>
+<div id="customUrlContainer" style="display:none; margin-top:10px;">
+<input type="text" id="customImageUrl" placeholder="https://...">
+<button class="test-btn" id="testImageBtn">Test Load</button>
+</div>
+<div id="imageTestResult" style="font-size:12px; margin-top:5px;"></div>
 </div>
 
 <div class="form-group">
@@ -58,12 +67,6 @@ To Sir Phillip, With Love - Julia Quinn
 <input type="text" id="downloadLink" value="https://magafiles.com/1863142" placeholder="https://...">
 </div>
 
-<div class="form-group">
-<label>🖼️ URL GAMBAR HALAMAN 2 (opsional)</label>
-<input type="text" id="imageUrl" value="https://read.filepdf.site/dq-content/themes/books/img/fb-page-intro.jpg" placeholder="https://...">
-<small style="color:#666;">Kosongkan jika tidak ingin menambahkan gambar</small>
-</div>
-
 <button class="gen-btn" id="generateBtn">
 📦 GENERATE PDF
 </button>
@@ -79,6 +82,27 @@ author: 'Julia Quinn',
 id: 'OL554603W',
 coverUrl: 'https://covers.openlibrary.org/b/id/12389591-L.jpg'
 };
+
+// Handle image select
+document.getElementById('imageSelect').addEventListener('change', function() {
+if (this.value === 'custom') {
+document.getElementById('customUrlContainer').style.display = 'block';
+} else {
+document.getElementById('customUrlContainer').style.display = 'none';
+}
+});
+
+// Test image load
+document.getElementById('testImageBtn').addEventListener('click', function() {
+const url = document.getElementById('customImageUrl').value;
+const resultDiv = document.getElementById('imageTestResult');
+resultDiv.innerHTML = '⏳ Testing...';
+const img = new Image();
+img.crossOrigin = 'Anonymous';
+img.onload = () => resultDiv.innerHTML = '✅ Gambar bisa diload!';
+img.onerror = () => resultDiv.innerHTML = '❌ Gambar gagal diload, cek URL';
+img.src = url;
+});
 
 // Fetch dari OpenLibrary
 document.getElementById('fetchBtn').addEventListener('click', async () => {
@@ -116,7 +140,7 @@ coverUrl: coverUrl
 };
 
 statusDiv.innerHTML = `<b>${data.title}</b> - ${authorName}`;
-coverPreview.innerHTML = `<img src="${coverUrl}" class="cover-preview" alt="cover">`;
+coverPreview.innerHTML = `<img src="${coverUrl}" class="cover-preview" alt="cover" onerror="this.src='https://covers.openlibrary.org/b/id/12389591-L.jpg'">`;
 } catch (error) {
 statusDiv.innerHTML = `❌ Error: ${error.message}`;
 }
@@ -152,7 +176,9 @@ status.innerHTML = '⏳ Membuat PDF...';
 
 try {
 const downloadLink = document.getElementById('downloadLink').value;
-const imageUrl = document.getElementById('imageUrl').value;
+const imageSelect = document.getElementById('imageSelect').value;
+const customUrl = document.getElementById('customImageUrl').value;
+const imageUrl = imageSelect === 'custom' ? customUrl : imageSelect;
 const book = currentBook;
 
 const pdf = new jsPDF({
@@ -235,15 +261,17 @@ page2Img.src = imageUrl;
 await new Promise((resolve, reject) => {
 page2Img.onload = resolve;
 page2Img.onerror = reject;
-setTimeout(reject, 3000);
 });
-// Gambar full halaman
 pdf.addImage(page2Img, 'JPEG', 0, 0, pageWidth, pageHeight);
+status.innerHTML = '✅ Gambar halaman 2 sukses diload';
 } catch (e) {
 console.log('Gagal load gambar halaman 2');
 pdf.setFontSize(20);
 pdf.setTextColor(255, 0, 0);
 pdf.text('GAMBAR TIDAK DAPAT DILOAD', centerX, pageHeight/2, { align: 'center' });
+pdf.setFontSize(12);
+pdf.setTextColor(0, 0, 255);
+pdf.text('Cek URL gambar Anda', centerX, pageHeight/2 + 30, { align: 'center' });
 }
 }
 
@@ -299,7 +327,7 @@ pdf.text('Kembali ke halaman pertama dan klik link di atas', centerX, pageHeight
 
 const filename = `${book.title.replace(/[^a-z0-9]/gi, '_')}_${book.id}.pdf`;
 pdf.save(filename);
-status.innerHTML = '✅ PDF BERHASIL! Halaman 2 pakai gambar dari hosting';
+status.innerHTML = '✅ PDF BERHASIL!';
 
 } catch (error) {
 status.innerHTML = `❌ Error: ${error.message}`;
