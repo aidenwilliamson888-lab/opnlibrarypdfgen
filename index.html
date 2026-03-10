@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenLibrary PDF Generator · ala aconfinement.pdf</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- jsPDF from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #1a2f3f 0%, #0d202d 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .generator-card {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 2.5rem;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,215,120,0.5);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3b4f, #3a2c1f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .sub {
+            color: #4a5f70;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #f5b342;
+        }
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .preview-box {
+            background: #e9f0f7;
+            border-radius: 30px;
+            padding: 1.5rem;
+            border: 2px solid #c0d0e0;
+            box-shadow: inset 0 0 0 2px white;
+        }
+        .preview-box h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e3b4f;
+            margin-bottom: 1.2rem;
+        }
+        .book-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex;
+            gap: 1.2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .book-card img {
+            width: 80px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: #ccc;
+        }
+        .book-info h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .book-info p {
+            color: #4a5f70;
+            font-size: 0.9rem;
+        }
+        .form-box {
+            background: #f8f2e7;
+            border-radius: 30px;
+            padding: 1.8rem;
+            border: 2px solid #f5b342;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #1e3b4f;
+            margin-bottom: 0.5rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #cddbe8;
+            border-radius: 20px;
+            font-size: 1rem;
+            background: white;
+            transition: 0.2s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #f5b342;
+            box-shadow: 0 0 0 4px #f5b34230;
+        }
+        .workid-input {
+            display: flex;
+            gap: 10px;
+        }
+        .workid-input input {
+            flex: 1;
+        }
+        .workid-input button {
+            background: #1e3b4f;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 4px solid #f5b342;
+        }
+        .download-link-input {
+            background: #e4edf5;
+            padding: 1rem;
+            border-radius: 20px;
+            margin: 1.5rem 0;
+            border-left: 8px solid #f5b342;
+        }
+        .generate-btn {
+            background: #f5b342;
+            color: #1e3b4f;
+            border: none;
+            border-radius: 40px;
+            padding: 1.2rem 2rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 12px 0 #b87d1f;
+            transition: 0.1s;
+            margin-top: 1rem;
+        }
+        .generate-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 6px 0 #b87d1f;
+        }
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 20px;
+            background: #ffffffc0;
+        }
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f5b342;
+            border-radius: 50%;
+            border-top-color: #1e3b4f;
+            animation: spin 1s infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .page-preview {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-top: 1rem;
+        }
+        .mini-page {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.6rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="generator-card">
+        <h1>
+            <i class="fas fa-file-pdf" style="color: #f53b3b;"></i>
+            OpenLibrary PDF Generator
+            <span style="font-size: 1rem; background: #1e3b4f; color: white; padding: 0.3rem 1rem; border-radius: 40px; margin-left: auto;">ala aconfinement.pdf</span>
+        </h1>
+        <div class="sub">Buat file PDF dengan halaman angka berulang + promosi download, data dari OpenLibrary</div>
+
+        <div class="two-columns">
+            <!-- Kiri: Preview Data OpenLibrary -->
+            <div class="preview-box">
+                <h3><i class="fas fa-book-open" style="color: #f5b342;"></i> Preview Data OpenLibrary</h3>
+                <div id="bookPreview">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-spinner fa-pulse fa-2x"></i>
+                        <p>Masukkan Work ID untuk preview</p>
+                    </div>
+                </div>
+                <div class="page-preview" id="pagePreview">
+                    <!-- akan diisi javascript -->
+                </div>
+            </div>
+
+            <!-- Kanan: Form Generator -->
+            <div class="form-box">
+                <h3 style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                    <i class="fas fa-sliders-h" style="color: #f5b342;"></i> 
+                    Setting Generator
+                </h3>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> OpenLibrary Work ID</label>
+                    <div class="workid-input">
+                        <input type="text" id="workIdInput" placeholder="contoh: OL27448W, OL15626917W" value="OL27448W">
+                        <button id="fetchBookBtn"><i class="fas fa-sync-alt"></i> Fetch</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-link"></i> Link Download (isi manual)</label>
+                    <div class="download-link-input">
+                        <input type="url" id="downloadLink" placeholder="https://domainanda.com/buku.pdf" value="https://magafiles.com/1863142">
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #666;">*Link ini akan muncul di setiap halaman promosi</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-file-alt"></i> Jumlah Halaman</label>
+                    <input type="number" id="pageCount" min="5" max="200" value="20">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-pen-fancy"></i> Teks Promosi (optional)</label>
+                    <textarea id="promoText" rows="3">Download or Read Online {title} free ebook (PDF ePub Mobi) - {author}</textarea>
+                    <p style="font-size: 0.8rem;">Gunakan {title} dan {author} untuk data dinamis</p>
+                </div>
+
+                <button class="generate-btn" id="generateBtn">
+                    <i class="fas fa-file-pdf"></i> GENERATE PDF SEKARANG
+                </button>
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // state untuk menyimpan data buku terakhir
+        let currentBookData = {
+            title: 'To Sir Philip, with Love',
+            author: 'Julia Quinn',
+            coverUrl: 'https://covers.openlibrary.org/b/id/12389591-L.jpg',
+            workId: 'OL27448W'
+        };
+
+        // preview awal
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchBookData('OL27448W'); // default
+        });
+
+        // fetch dari OpenLibrary
+        async function fetchBookData(workId) {
+            const previewDiv = document.getElementById('bookPreview');
+            previewDiv.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-pulse fa-2x"></i><p>Fetching data...</p></div>';
+            
+            try {
+                // fetch work
+                const workRes = await fetch(`https://openlibrary.org/works/${workId}.json`);
+                if (!workRes.ok) throw new Error('Work ID tidak ditemukan');
+                const work = await workRes.json();
+                
+                // cari cover
+                let coverUrl = 'https://covers.openlibrary.org/b/id/12389591-L.jpg';
+                try {
+                    const searchRes = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(work.title)}&fields=cover_i&limit=1`);
+                    const searchData = await searchRes.json();
+                    if (searchData.docs[0]?.cover_i) {
+                        coverUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-L.jpg`;
+                    }
+                } catch (e) {}
+                
+                // author
+                let authorName = 'Unknown Author';
+                if (work.authors && work.authors[0]?.author?.key) {
+                    try {
+                        const authorRes = await fetch(`https://openlibrary.org${work.authors[0].author.key}.json`);
+                        const authorData = await authorRes.json();
+                        authorName = authorData.name;
+                    } catch {}
+                }
+                
+                currentBookData = {
+                    title: work.title,
+                    author: authorName,
+                    coverUrl: coverUrl,
+                    workId: workId
+                };
+                
+                // update preview
+                previewDiv.innerHTML = `
+                    <div class="book-card">
+                        <img src="${coverUrl}" alt="cover" onerror="this.src='https://covers.openlibrary.org/b/id/12389591-L.jpg'">
+                        <div class="book-info">
+                            <h4>${work.title}</h4>
+                            <p><i class="fas fa-user-pen"></i> ${authorName}</p>
+                            <p><i class="fas fa-barcode"></i> ${workId}</p>
+                            <p style="font-size:0.8rem; margin-top:0.5rem;">✓ Data siap digunakan</p>
+                        </div>
+                    </div>
+                `;
+                
+                // update preview halaman
+                updatePagePreview();
+                
+            } catch (error) {
+                previewDiv.innerHTML = `<div style="color: #c00; padding: 1rem;"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+            }
+        }
+
+        // update preview mini halaman
+        function updatePagePreview() {
+            const container = document.getElementById('pagePreview');
+            const count = Math.min(10, parseInt(document.getElementById('pageCount').value) || 20);
+            let html = '';
+            for (let i = 1; i <= Math.min(count, 10); i++) {
+                html += `<div class="mini-page"><b>Hal ${i}</b><br>1 1 1 1 1</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        document.getElementById('pageCount').addEventListener('input', updatePagePreview);
+        document.getElementById('fetchBookBtn').addEventListener('click', () => {
+            const workId = document.getElementById('workIdInput').value.trim();
+            if (workId) fetchBookData(workId);
+        });
+
+        // GENERATE PDF
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Menyiapkan PDF...';
+            
+            const { jsPDF } = window.jspdf;
+            
+            try {
+                // ambil data dari form
+                const workId = document.getElementById('workIdInput').value.trim() || 'OL27448W';
+                const downloadLink = document.getElementById('downloadLink').value || 'https://example.com/download';
+                const totalPages = parseInt(document.getElementById('pageCount').value) || 20;
+                let promoTextTemplate = document.getElementById('promoText').value || 'Download or Read Online {title} free ebook (PDF ePub Mobi) - {author}';
+                
+                // pastikan data buku terbaru (fetch ulang jika perlu)
+                if (currentBookData.workId !== workId) {
+                    await fetchBookData(workId);
+                }
+                
+                const title = currentBookData.title;
+                const author = currentBookData.author;
+                
+                // siapkan teks promosi yang sudah diganti
+                const replacePlaceholders = (text) => {
+                    return text
+                        .replace(/{title}/g, title)
+                        .replace(/{author}/g, author);
+                };
+                
+                const promoLine = replacePlaceholders(promoTextTemplate);
+                
+                // buat PDF
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'pt',
+                    format: 'a4'
+                });
+                
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 50;
+                
+                // generate halaman
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    if (pageNum > 1) pdf.addPage();
+                    
+                    // background putih
+                    pdf.setFillColor(255, 255, 255);
+                    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+                    
+                    // --- Pola angka 1 1 1 (seperti contoh) ---
+                    pdf.setTextColor(200, 200, 200);
+                    pdf.setFontSize(10);
+                    pdf.setFont('helvetica', 'normal');
+                    
+                    // bikin kolom angka: 10 baris, 15 kolom
+                    const startY = 70;
+                    const startX = 50;
+                    for (let row = 0; row < 25; row++) {
+                        let line = '';
+                        for (let col = 0; col < 18; col++) {
+                            // variasi: kadang 1, kadang angka urut
+                            if (col === 0 && row % 5 === 0) {
+                                line += `${Math.floor(row/5)+1} `;
+                            } else {
+                                line += '1 ';
+                            }
+                        }
+                        pdf.text(line, startX, startY + (row * 15));
+                    }
+                    
+                    // --- Teks promosi di tengah (seperti contoh halaman 11-21) ---
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.setFontSize(16);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(title, pageWidth/2, pageHeight/2 - 60, { align: 'center' });
+                    
+                    pdf.setFontSize(12);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor(80, 80, 80);
+                    
+                    // promosi utama
+                    const promoY = pageHeight/2 - 20;
+                    pdf.text(promoLine, pageWidth/2, promoY, { align: 'center' });
+                    
+                    // informasi download
+                    pdf.setFontSize(11);
+                    pdf.setTextColor(30, 60, 100);
+                    pdf.text('⬇️ Untuk mendownload ebook lengkap:', pageWidth/2, pageHeight/2 + 20, { align: 'center' });
+                    
+                    pdf.setTextColor(0, 0, 200);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(downloadLink, pageWidth/2, pageHeight/2 + 45, { align: 'center' });
+                    
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.setFont('helvetica', 'italic');
+                    pdf.setFontSize(10);
+                    pdf.text('Kembali ke halaman pertama dan klik link di atas', pageWidth/2, pageHeight/2 + 70, { align: 'center' });
+                    
+                    // nomor halaman kecil di footer
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(150, 150, 150);
+                    pdf.text(`Halaman ${pageNum} dari ${totalPages}`, pageWidth/2, pageHeight - 30, { align: 'center' });
+                }
+                
+                // simpan PDF
+                const filename = `${title.replace(/[^a-z0-9]/gi, '_')}_${workId}.pdf`;
+                pdf.save(filename);
+                
+                statusDiv.innerHTML = `<i class="fas fa-check-circle" style="color: #2a7;"></i> PDF berhasil dibuat! (${totalPages} halaman)`;
+                
+            } catch (error) {
+                console.error(error);
+                statusDiv.innerHTML = `<i class="fas fa-times-circle" style="color: #c00;"></i> Error: ${error.message}`;
+            }
+        });
+
+        // inisialisasi preview halaman
+        updatePagePreview();
+    </script>
+</body>
+</html>
