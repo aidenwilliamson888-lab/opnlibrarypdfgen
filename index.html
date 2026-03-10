@@ -1,386 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Generator · OpenLibrary (Presisi ala contoh)</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
-        body { background: #1a1f2e; padding: 20px; display: flex; justify-content: center; }
-        .container {
-            max-width: 1100px;
-            width: 100%;
-            background: #ffffff;
-            border-radius: 30px;
-            padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 3px solid #ffaa33;
-        }
-        h1 { 
-            font-size: 28px; 
-            color: #1e3b4f; 
-            border-left: 10px solid #ffaa33;
-            padding-left: 20px;
-            margin-bottom: 20px;
-            font-family: 'Arial', sans-serif;
-        }
-        .preview-badge {
-            background: #ffaa33;
-            color: #000;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        .two-col {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 25px;
-        }
-        /* Preview Panel */
-        .preview-panel {
-            background: #f0f5fc;
-            border-radius: 20px;
-            padding: 20px;
-            border: 3px solid #ccddee;
-        }
-        .sample-display {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.3;
-            border: 2px dashed #ffaa33;
-            white-space: pre-wrap;
-            word-break: break-all;
-            height: 200px;
-            overflow-y: auto;
-        }
-        .sample-text {
-            color: #333;
-        }
-        .sample-text .angka2 {
-            color: #ff5500;
-            font-weight: bold;
-        }
-        /* Form Panel */
-        .form-panel {
-            background: #fff7e8;
-            border-radius: 20px;
-            padding: 20px;
-            border: 3px solid #ffaa33;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            color: #1e3b4f;
-            margin-bottom: 5px;
-            font-family: 'Arial', sans-serif;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ccddee;
-            border-radius: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #ffaa33;
-        }
-        .workid-row {
-            display: flex;
-            gap: 10px;
-        }
-        .workid-row button {
-            background: #1e3b4f;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 0 20px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .download-row {
-            background: #fff0d4;
-            padding: 15px;
-            border-radius: 12px;
-            border-left: 8px solid #ffaa33;
-        }
-        .page-control {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .page-control input {
-            width: 100px;
-            text-align: center;
-        }
-        .gen-btn {
-            background: #ffaa33;
-            border: none;
-            border-radius: 50px;
-            padding: 18px;
-            font-size: 20px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            box-shadow: 0 8px 0 #b87d1f;
-            transition: 0.1s;
-            margin-top: 15px;
-        }
-        .gen-btn:active {
-            transform: translateY(5px);
-            box-shadow: 0 3px 0 #b87d1f;
-        }
-        #status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 10px;
-            background: #e5f0ff;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>📚 IMmedia PDF Generator + OpenLibrary</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<style>
+/* ===== GLOBAL ===== */
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#eef1ff;
+  display:flex;
+  justify-content:center;
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  width:100%;
+  max-width:1200px;
+  padding:20px;
+  text-align:center;
+}
+
+/* ===== TITLE ===== */
+h1{
+  margin-bottom:20px;
+  color:#102060;
+  font-size:28px;
+}
+h1 small {
+  font-size: 14px;
+  color: #ff6600;
+  display: block;
+  margin-top: 5px;
+}
+
+/* ===== TABLE ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+th, td{
+  border:1px solid #ddd;
+  padding:8px;
+  font-size:13px;
+}
+
+th{
+  background:#f3f5ff;
+  color:#102060;
+  text-align:center;
+}
+
+td{
+  text-align:left;
+  vertical-align:middle;
+}
+
+/* ===== COLUMN WIDTHS ===== */
+th:nth-child(6),
+td:nth-child(6){
+  min-width:90px;
+}
+
+/* ===== INPUTS ===== */
+input, select{
+  width:100%;
+  padding:6px 10px;
+  font-size:13px;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+
+/* ===== SELECT FIX ===== */
+select{
+  padding-right:28px;
+  background-position:right 10px center;
+}
+
+/* ===== PREVIEW ===== */
+.preview{
+  text-align:center;
+}
+
+.preview img{
+  width:70px;
+  height:100px;
+  object-fit:cover;
+  border-radius:4px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ===== FETCH BUTTON ===== */
+.fetch-btn {
+  margin-top: 5px;
+  padding: 4px 8px;
+  background: #ffaa33;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+.fetch-btn:hover {
+  background: #ff9900;
+}
+.status-fetch {
+  font-size: 10px;
+  margin-top: 3px;
+  color: #008800;
+}
+
+/* ===== BUTTONS ===== */
+button{
+  margin:15px 6px 0;
+  padding:12px 26px;
+  background:#102060;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  font-size:14px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
+  transition:all 0.2s ease;
+}
+
+button:hover{
+  background:#0b1745;
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:translateY(0);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+  table{
+    font-size:12px;
+  }
+
+  h1{
+    font-size:22px;
+  }
+
+  button{
+    width:100%;
+    margin-top:10px;
+  }
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>📄 OPENLIBRARY PDF GENERATOR</h1>
-        <div class="preview-badge">⚡ PRESISI 100% · CONTOH: To_Sir_Phillip__With_Love_OL554603W.pdf</div>
-        
-        <div class="two-col">
-            <!-- KIRI: PREVIEW FORMAT -->
-            <div class="preview-panel">
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <i class="fas fa-eye" style="color:#ffaa33; font-size:24px;"></i>
-                    <span style="font-weight:bold;">PREVIEW FORMAT EXACT</span>
-                </div>
-                
-                <!-- SAMPLE DARI FILE ASLI -->
-                <div class="sample-display" id="sampleDisplay">
-11111111111111111 11111111111111111 11111111111111111 11111111111111 11111111111111111 <span class="angka2">2</span>1111111111111111 11111111111111111 11111111111111111 11111111111111111
-                </div>
-                
-                <div style="margin-top: 15px; font-size: 12px; background:#eef; padding:10px; border-radius:10px;">
-                    <strong>✓ POLA PERSIS:</strong><br>
-                    • Format: 17x angka "1" per blok<br>
-                    • Setiap 5 blok ada angka <span style="color:#ff5500;">"2"</span><br>
-                    • Spasi antar blok persis<br>
-                    • Halaman 10 ada teks "Kembali ke halaman..."<br>
-                    • Total halaman: 20 (10 pola + 10 repeat)
-                </div>
-            </div>
-            
-            <!-- KANAN: FORM GENERATOR -->
-            <div class="form-panel">
-                <h3 style="margin-bottom: 20px;"><i class="fas fa-sliders-h"></i> KONTROL GENERATOR</h3>
-                
-                <!-- WORK ID -->
-                <div class="form-group">
-                    <label>📌 OPENLIBRARY WORK ID</label>
-                    <div class="workid-row">
-                        <input type="text" id="workId" value="OL554603W" placeholder="contoh: OL554603W">
-                        <button id="fetchBtn"><i class="fas fa-download"></i> FETCH</button>
-                    </div>
-                    <div id="bookInfo" style="margin-top:10px; font-size:12px; background:#f0f0f0; padding:8px; border-radius:8px;">
-                        To Sir Phillip, With Love - Julia Quinn
-                    </div>
-                </div>
-                
-                <!-- LINK DOWNLOAD (MANUAL) -->
-                <div class="form-group download-row">
-                    <label>🔗 LINK DOWNLOAD (ISI MANUAL)</label>
-                    <input type="text" id="downloadLink" value="https://magafiles.com/1863142" placeholder="https://...">
-                    <small style="color:#666;">Link ini akan muncul di halaman 10</small>
-                </div>
-                
-                <!-- JUMLAH HALAMAN -->
-                <div class="form-group">
-                    <label>📄 JUMLAH HALAMAN</label>
-                    <div class="page-control">
-                        <input type="number" id="pageCount" min="10" max="200" value="20">
-                        <span style="color:#666;">(min 10)</span>
-                    </div>
-                    <small>Halaman 1-9: full angka | Halaman 10: angka + teks | 11-20: full angka lagi</small>
-                </div>
-                
-                <!-- TOMBOL GENERATE -->
-                <button class="gen-btn" id="generateBtn">
-                    <i class="fas fa-file-pdf"></i> GENERATE PDF PRESISI
-                </button>
-                
-                <div id="status"></div>
-            </div>
-        </div>
-    </div>
+<div class="container">
+<h1>📚 IMmedia PDF Generator <small>+ OpenLibrary Integration · ASIN/Work ID auto-fill</small></h1>
 
-    <script>
-        // Data buku (default dari OL554603W)
-        let currentBook = {
-            title: 'To Sir Phillip, With Love',
-            author: 'Julia Quinn',
-            id: 'OL554603W'
-        };
+<table>
+<thead>
+<tr>
+<th>OUTPUT FILE</th>
+<th>TITLE PDF</th>
+<th>TITLE BOOK</th>
+<th>AUTHOR</th>
+<th>DOWNLOAD LINK</th>
+<th>LANG</th>
+<th>ASIN/Work ID</th>
+<th>Preview</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
 
-        // Fetch dari OpenLibrary
-        document.getElementById('fetchBtn').addEventListener('click', async () => {
-            const workId = document.getElementById('workId').value.trim();
-            const statusDiv = document.getElementById('bookInfo');
-            
-            if (!workId) return;
-            
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Fetching...';
-            
-            try {
-                const res = await fetch(`https://openlibrary.org/works/${workId}.json`);
-                if (!res.ok) throw new Error('Tidak ditemukan');
-                const data = await res.json();
-                
-                let authorName = 'Unknown';
-                if (data.authors && data.authors[0]) {
-                    const authorKey = data.authors[0].author.key;
-                    const authorRes = await fetch(`https://openlibrary.org${authorKey}.json`);
-                    const authorData = await authorRes.json();
-                    authorName = authorData.name;
-                }
-                
-                currentBook = {
-                    title: data.title,
-                    author: authorName,
-                    id: workId
-                };
-                
-                statusDiv.innerHTML = `<b>${data.title}</b> - ${authorName}`;
-                
-            } catch (error) {
-                statusDiv.innerHTML = `❌ Error: ${error.message}`;
-            }
-        });
+<button onclick="addRow()">➕ Add Row</button>
+<button onclick="generateZIP()">📦 Generate ZIP</button>
+</div>
 
-        // Fungsi membuat baris angka PERSIS seperti contoh
-        function generateAngkaRow(rowIndex) {
-            // Contoh: "11111111111111111 11111111111111111 11111111111111111 11111111111111 11111111111111111 2 1111111111111111 ..."
-            let blok = [];
-            
-            // Total 9 blok angka (seperti contoh)
-            for (let i = 0; i < 9; i++) {
-                if (i === 5) { // blok ke-6 (index 5) adalah angka 2
-                    blok.push('2');
-                } else {
-                    // 17 digit angka 1
-                    blok.push('1'.repeat(17));
-                }
-            }
-            
-            // Gabungkan dengan spasi SINGLE
-            return blok.join(' ');
-        }
+<script>
+const rows=document.getElementById('rows');
+addRow();
 
-        // Fungsi generate PDF
-        document.getElementById('generateBtn').addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
-            const status = document.getElementById('status');
-            status.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Membuat PDF...';
-            
-            try {
-                const totalPages = parseInt(document.getElementById('pageCount').value) || 20;
-                const downloadLink = document.getElementById('downloadLink').value || 'https://example.com';
-                const book = currentBook;
-                
-                // Buat PDF dengan ukuran A4
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'pt',
-                    format: 'a4'
-                });
-                
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                
-                // Margin dan posisi
-                const leftMargin = 50;
-                let yPos = 70;
-                const lineHeight = 22; // spasi antar baris
-                
-                // Generate setiap halaman
-                for (let page = 1; page <= totalPages; page++) {
-                    if (page > 1) pdf.addPage();
-                    
-                    // Reset posisi Y untuk setiap halaman baru
-                    yPos = 70;
-                    
-                    // Hitung jumlah baris per halaman (A4 muat sekitar 35 baris)
-                    const rowsPerPage = 32;
-                    
-                    // Generate baris-baris angka
-                    for (let row = 0; row < rowsPerPage; row++) {
-                        // Variasi kecil: setiap baris ke-5 memiliki pola sedikit berbeda? 
-                        // Tapi dalam file contoh semua baris SAMA PERSIS
-                        const barisAngka = generateAngkaRow(row);
-                        
-                        pdf.setFont('Courier', 'normal');
-                        pdf.setFontSize(10);
-                        pdf.setTextColor(80, 80, 80);
-                        pdf.text(barisAngka, leftMargin, yPos);
-                        
-                        yPos += lineHeight;
-                    }
-                    
-                    // KHUSUS HALAMAN 10: tambahkan teks "Kembali ke halaman pertama dan klik link di atas"
-                    if (page === 10) {
-                        pdf.setFont('Helvetica', 'bold');
-                        pdf.setFontSize(14);
-                        pdf.setTextColor(200, 80, 0);
-                        
-                        // Teks di tengah halaman (menimpa sedikit angka)
-                        pdf.text('Kembali ke halaman pertama dan klik link di atas', pageWidth/2, pageHeight/2, { align: 'center' });
-                        
-                        // Tambahkan link download di bawahnya
-                        pdf.setFontSize(12);
-                        pdf.setTextColor(0, 0, 200);
-                        pdf.text(downloadLink, pageWidth/2, pageHeight/2 + 30, { align: 'center' });
-                        
-                        // Tambahkan judul buku
-                        pdf.setFontSize(16);
-                        pdf.setTextColor(0, 0, 0);
-                        pdf.text(book.title, pageWidth/2, pageHeight/2 - 40, { align: 'center' });
-                    }
-                    
-                    // HALAMAN 20 (atau halaman terakhir) tambahkan juga teks serupa? 
-                    // Dalam file contoh, halaman 20 tetap full angka. Tapi kita ikuti contoh.
-                    
-                    // Nomor halaman kecil di pojok (tidak ada di contoh, tapi kita sembunyikan)
-                    // pdf.setFontSize(8);
-                    // pdf.setTextColor(200,200,200);
-                    // pdf.text(`Page ${page}`, pageWidth - 50, pageHeight - 30);
-                }
-                
-                // Simpan PDF
-                const filename = `${book.title.replace(/[^a-z0-9]/gi, '_')}_${book.id}.pdf`;
-                pdf.save(filename);
-                
-                status.innerHTML = '✅ PDF BERHASIL! Format persis seperti contoh.';
-                
-            } catch (error) {
-                status.innerHTML = `❌ Error: ${error.message}`;
-                console.error(error);
-            }
-        });
+/* ===== JAPANESE FONT ===== */
+let JP_FONT=null;
+async function loadJapaneseFont(){
+  if(JP_FONT) return JP_FONT;
+  const r=await fetch('fonts/HeiseiKakuGo-W5.ttf');
+  const b=await r.arrayBuffer();
+  JP_FONT=btoa([...new Uint8Array(b)].map(x=>String.fromCharCode(x)).join(''));
+  return JP_FONT;
+}
 
-        // Trigger fetch awal untuk OL554603W
-        window.addEventListener('load', () => {
-            document.getElementById('fetchBtn').click();
-        });
-    </script>
+/* ===== OPENLIBRARY FETCH FUNCTION ===== */
+async function fetchFromOpenLibrary(asin, row) {
+  const statusSpan = row.querySelector('.fetch-status') || document.createElement('span');
+  statusSpan.className = 'status-fetch';
+  statusSpan.innerHTML = '⏳ Fetching...';
+  row.querySelector('td:nth-child(7)').appendChild(statusSpan);
+  
+  try {
+    // Coba cari di OpenLibrary dengan ASIN/Work ID
+    let workId = asin;
+    let data = null;
+    
+    // Coba search dulu
+    const searchRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(asin)}&limit=1`);
+    const searchData = await searchRes.json();
+    
+    if (searchData.docs && searchData.docs.length > 0) {
+      const doc = searchData.docs[0];
+      const title = doc.title;
+      const author = doc.author_name ? doc.author_name[0] : 'Unknown';
+      const coverId = doc.cover_i;
+      
+      // Update fields
+      row.querySelector('.pdf').value = title;
+      row.querySelector('.title').value = title;
+      row.querySelector('.author').value = author;
+      
+      // Update preview gambar
+      if (coverId) {
+        row.querySelector('img').src = `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
+      }
+      
+      statusSpan.innerHTML = '✅ OpenLibrary OK';
+      setTimeout(() => statusSpan.remove(), 3000);
+    } else {
+      statusSpan.innerHTML = '❌ Not found';
+    }
+  } catch (error) {
+    console.error(error);
+    statusSpan.innerHTML = '❌ Error';
+  }
+}
+
+/* ===== CTA BUTTON TEXT ===== */
+const CTA_TEXT={
+  en:"DOWNLOAD PDF",es:"DESCARGAR PDF",pt:"BAIXAR PDF",fr:"TÉLÉCHARGER PDF",
+  de:"PDF HERUNTERLADEN",it:"SCARICA PDF",ja:"PDFをダウンロード",ar:"تحميل PDF"
+};
+
+/* ========= SEO TEXT UNDER TITLE ========= */
+const TRANSLATIONS={
+  en:({t,a})=>`Download or Read Online ${t} free ebook (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | EBOOK ONLINE DOWNLOAD
+If you want to download free Ebook, you are in the right place to download Ebook.
+Ebook/PDF ${t} DOWNLOAD in English is available for free here.
+Click on the download LINK below to download Ebook ${t} PDF Download by ${a} (Author).`,
+
+  es:({t,a})=>`Descargar o leer online ${t} ebook gratis (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | DESCARGA ONLINE DE EBOOKS
+Si quieres descargar un Ebook gratis, estás en el lugar correcto.
+El Ebook/PDF ${t} está disponible gratis aquí.
+Haz clic en el enlace de descarga para obtener ${t} de ${a}.`,
+
+  pt:({t,a})=>`Baixar ou ler online ${t} ebook grátis (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | DOWNLOAD DE EBOOK
+Se você quer baixar Ebook grátis, este é o lugar certo.
+O Ebook/PDF ${t} está disponível gratuitamente aqui.
+Clique no link abaixo para baixar ${t} de ${a}.`,
+
+  fr:({t,a})=>`Télécharger ou lire en ligne ${t} ebook gratuit (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | TÉLÉCHARGEMENT EBOOK
+Si vous souhaitez télécharger un Ebook gratuit, vous êtes au bon endroit.
+L’Ebook ${t} est disponible gratuitement ici.`,
+
+  de:({t,a})=>`${t} kostenloses Ebook herunterladen oder online lesen (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | EBOOK DOWNLOAD
+Wenn Sie ein kostenloses Ebook suchen, sind Sie hier richtig.`,
+
+  it:({t,a})=>`Scarica o leggi online ${t} ebook gratuito (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | DOWNLOAD EBOOK
+Se vuoi scaricare Ebook gratuiti, sei nel posto giusto.`,
+
+  ja:({t,a})=>`${t} 無料電子書籍をダウンロードまたはオンラインで読む (PDF ePub Mobi) - ${a}
+
+Ebook PDF ${t} | 電子書籍ダウンロード`,
+
+  ar:({t,a})=>`تحميل أو قراءة ${t} كتاب إلكتروني مجاني (PDF ePub Mobi) - ${a}
+
+كتاب PDF ${t} | تحميل كتاب إلكتروني`
+};
+
+/* ===== SEO KEYWORDS ===== */
+const SEO_KEYWORDS={
+  en:(t,a)=>`${t}, ebook pdf, free ebook, download ebook, ${a}`,
+  es:(t,a)=>`${t}, ebook pdf, ebook gratis, descargar ebook, ${a}`,
+  pt:(t,a)=>`${t}, ebook pdf, ebook grátis, baixar ebook, ${a}`,
+  fr:(t,a)=>`${t}, ebook pdf, ebook gratuit, télécharger ebook, ${a}`,
+  de:(t,a)=>`${t}, ebook pdf, kostenloses ebook, herunterladen, ${a}`,
+  it:(t,a)=>`${t}, ebook pdf, ebook gratuito, scaricare ebook, ${a}`,
+  ja:(t,a)=>`${t}, 電子書籍, PDF, 無料, ダウンロード, ${a}`,
+  ar:(t,a)=>`${t}, كتاب إلكتروني, PDF, تحميل, ${a}`
+};
+
+/* ===== TEXT VARIANTS ===== */
+const TEXT_VARIANTS={
+  en:[
+    "This preview page introduces key concepts discussed throughout the ebook.",
+    "This page provides a short overview of ideas explored in the full publication.",
+    "This section highlights themes that are expanded in later chapters.",
+    "This preview contains selected information from the original ebook.",
+    "This page summarizes important ideas presented in the complete book."
+  ],
+  es:[
+    "Esta página de vista previa introduce conceptos clave del ebook.",
+    "Esta página ofrece una breve descripción de las ideas del libro.",
+    "Esta sección destaca temas desarrollados en capítulos posteriores.",
+    "Esta vista previa contiene información seleccionada del ebook original.",
+    "Esta página resume ideas importantes del libro completo."
+  ],
+  pt:[
+    "Esta página de prévia apresenta conceitos-chave do ebook.",
+    "Esta página fornece uma visão geral das ideias do livro.",
+    "Esta seção destaca temas desenvolvidos nos capítulos seguintes.",
+    "Esta prévia contém informações selecionadas do ebook original.",
+    "Esta página resume ideias importantes do livro completo."
+  ],
+  fr:[
+    "Cette page d’aperçu présente des concepts clés de l’ebook.",
+    "Cette page offre un bref aperçu des idées du livre.",
+    "Cette section met en évidence des thèmes développés plus loin.",
+    "Cet aperçu contient des informations sélectionnées de l’ebook original.",
+    "Cette page résume des idées importantes du livre complet."
+  ],
+  de:[
+    "Diese Vorschauseite stellt zentrale Konzepte des Ebooks vor.",
+    "Diese Seite bietet einen kurzen Überblick über die Inhalte des Buches.",
+    "Dieser Abschnitt hebt Themen hervor, die später vertieft werden.",
+    "Diese Vorschau enthält ausgewählte Inhalte aus dem Original-Ebook.",
+    "Diese Seite fasst wichtige Ideen des vollständigen Buches zusammen."
+  ],
+  it:[
+    "Questa pagina di anteprima introduce concetti chiave dell’ebook.",
+    "Questa pagina offre una breve panoramica delle idee del libro.",
+    "Questa sezione evidenzia temi sviluppati nei capitoli successivi.",
+    "Questa anteprima contiene informazioni selezionate dell’ebook originale.",
+    "Questa pagina riassume idee importanti del libro completo."
+  ],
+  ja:[
+    "このプレビューページでは重要な概念を紹介しています。",
+    "このページでは書籍全体の概要を紹介しています。",
+    "このセクションでは後の章で展開されるテーマを示しています。",
+    "このプレビューには選択された情報が含まれています。",
+    "このページは書籍の重要なポイントを要約しています。"
+  ],
+  ar:[
+    "تقدم هذه الصفحة التمهيدية مفاهيم أساسية من الكتاب.",
+    "توفر هذه الصفحة نظرة عامة مختصرة على محتوى الكتاب.",
+    "تسلط هذه الصفحة الضوء على موضوعات يتم شرحها لاحقًا.",
+    "تحتوي هذه المعاينة على معلومات مختارة من الكتاب الأصلي.",
+    "تلخص هذه الصفحة أفكارًا مهمة من الكتاب الكامل."
+  ]
+};
+
+/* ===== CTA VARIANTS ===== */
+const CTA_VARIANTS={
+  en:[
+    "To download the full ebook, please return to page 1 and click the download button.",
+    "For access to the complete PDF, go back to page 1 and use the download link.",
+    "The full ebook is available by returning to page 1 and clicking download.",
+    "To continue reading, please return to the first page and download the PDF."
+  ],
+  es:[
+    "Para descargar el ebook completo, vuelve a la página 1.",
+    "Para acceder al PDF completo, regresa a la página 1.",
+    "El ebook completo está disponible desde la página 1.",
+    "Para continuar leyendo, vuelve a la primera página."
+  ],
+  pt:[
+    "Para baixar o ebook completo, volte à página 1.",
+    "Para acessar o PDF completo, retorne à página 1.",
+    "O ebook completo está disponível na página 1.",
+    "Para continuar lendo, volte à primeira página."
+  ],
+  fr:[
+    "Pour télécharger l’ebook complet, revenez à la page 1.",
+    "Pour accéder au PDF complet, retournez à la page 1.",
+    "L’ebook complet est disponible depuis la page 1.",
+    "Pour continuer la lecture, revenez à la première page."
+  ],
+  de:[
+    "Um das vollständige Ebook herunterzuladen, kehren Sie zu Seite 1 zurück.",
+    "Für den Zugriff auf das vollständige PDF gehen Sie zu Seite 1.",
+    "Das vollständige Ebook ist über Seite 1 verfügbar.",
+    "Um weiterzulesen, kehren Sie zur ersten Seite zurück."
+  ],
+  it:[
+    "Per scaricare l’ebook completo, torna alla pagina 1.",
+    "Per accedere al PDF completo, ritorna alla pagina 1.",
+    "L’ebook completo è disponibile dalla pagina 1.",
+    "Per continuare a leggere, torna alla prima pagina."
+  ],
+  ja:[
+    "完全版をダウンロードするには1ページ目に戻ってください。",
+    "完全なPDFは1ページ目から入手できます。",
+    "電子書籍の完全版は1ページ目にあります。",
+    "続きを読むには最初のページに戻ってください。"
+  ],
+  ar:[
+    "لتحميل الكتاب الكامل، ارجع إلى الصفحة الأولى.",
+    "للوصول إلى ملف PDF الكامل، عد إلى الصفحة الأولى.",
+    "الكتاب الكامل متاح من الصفحة الأولى.",
+    "لمتابعة القراءة، ارجع إلى الصفحة الأولى."
+  ]
+};
+
+/* ===== UTIL ===== */
+function slugify(t){
+return t.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+
+async function loadImg(src){
+const i=new Image();i.src=src;await new Promise(r=>i.onload=r);
+const c=document.createElement('canvas');
+c.width=i.width;c.height=i.height;
+c.getContext('2d').drawImage(i,0,0);
+return c.toDataURL('image/jpeg',0.55);
+}
+
+/* ===== UI ===== */
+function addRow(){
+const tr=document.createElement('tr');
+tr.innerHTML=`
+<td><input class="out" placeholder="filename (optional)"></td>
+<td><input class="pdf" placeholder="Title in PDF"></td>
+<td><input class="title" placeholder="Book title"></td>
+<td><input class="author" placeholder="Author"></td>
+<td><input class="link" placeholder="https://..." value="https://magafiles.com/1863142"></td>
+<td>
+<select class="lang">
+<option value="en">EN</option><option value="es">ES</option>
+<option value="pt">PT</option><option value="fr">FR</option>
+<option value="de">DE</option><option value="it">IT</option>
+<option value="ja">JA</option><option value="ar">AR</option>
+</select></td>
+<td>
+<input class="asin" placeholder="ASIN or Work ID" oninput="preview(this)">
+<button class="fetch-btn" onclick="fetchFromOpenLibrary(this.closest('tr').querySelector('.asin').value, this.closest('tr'))">🔍 Fetch from OpenLibrary</button>
+</td>
+<td class="preview"><img></td>`;
+rows.appendChild(tr);
+}
+
+function preview(el){
+const val = el.value;
+if (val) {
+  el.closest('tr').querySelector('img').src =
+  `https://images-na.ssl-images-amazon.com/images/P/${val}.01.LZZZZZZZ.jpg`;
+}
+}
+
+/* ===== PDF ===== */
+async function buildPDF(d){
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF({unit:'pt',format:'a4',compress:true,putOnlyUsedFonts:true});
+const W=595,H=842;
+
+doc.setProperties({
+  title:d.title_pdf || d.title_book,
+  author:d.author,
+  subject:d.title_book,
+  keywords:(SEO_KEYWORDS[d.lang]||SEO_KEYWORDS.en)(d.title_book,d.author)
+});
+
+// Cover image
+try {
+  const cover=new Image();
+  cover.src=`https://images-na.ssl-images-amazon.com/images/P/${d.asin}.01.LZZZZZZZ.jpg`;
+  await new Promise((resolve, reject) => {
+    cover.onload = resolve;
+    cover.onerror = reject;
+    setTimeout(reject, 3000);
+  });
+  doc.addImage(cover,'JPEG',(W-220)/2,40,220,330);
+} catch (e) {
+  console.log('Cover not loaded, skipping');
+}
+
+doc.setFont('times','bold');doc.setFontSize(18);
+doc.text(d.title_pdf || d.title_book,W/2,410,{align:'center'});
+
+if(d.lang==='ja'){
+  const f=await loadJapaneseFont();
+  doc.addFileToVFS('jp.ttf',f);
+  doc.addFont('jp.ttf','jp','normal');
+  doc.setFont('jp','normal');
+}else doc.setFont('times','normal');
+
+doc.setFontSize(12);
+const trans = TRANSLATIONS[d.lang] || TRANSLATIONS.en;
+doc.text(trans({t:d.title_book,a:d.author}),W/2,460,{align:'center',maxWidth:420});
+
+const x=(W-280)/2,y=685;
+doc.setFillColor(16,32,96);
+doc.roundedRect(x,y,280,52,10,10,'F');
+doc.setTextColor(255,255,255);doc.setFontSize(16);
+doc.text(CTA_TEXT[d.lang] || CTA_TEXT.en,W/2,y+32,{align:'center'});
+doc.link(x,y,280,52,{url:d.link});
+doc.setTextColor(0,0,0);
+
+const total=Math.random()>0.5?21:20;
+for(let i=1;i<total;i++){
+doc.addPage();
+if(i<10){
+  // Gunakan placeholder pattern (angka 1 1 1...)
+  doc.setFont('courier','normal');
+  doc.setFontSize(8);
+  let yPos = 30;
+  for(let row=0; row<40; row++) {
+    let line = '';
+    for(let col=0; col<10; col++) {
+      line += '11111111111111111 ';
+    }
+    doc.text(line, 20, yPos);
+    yPos += 15;
+  }
+}else{
+  const tv=TEXT_VARIANTS[d.lang]||TEXT_VARIANTS.en;
+  const cv=CTA_VARIANTS[d.lang]||CTA_VARIANTS.en;
+  doc.setFont('times','normal');
+  doc.setFontSize(14);
+  doc.text(
+    `${d.title_book}\n\n${tv[i%tv.length]}\n\n${cv[i%cv.length]}`,
+    40,80,{maxWidth:520}
+  );
+}}
+return doc.output('blob');
+}
+
+/* ===== ZIP ===== */
+async function generateZIP(){
+const zip=new JSZip();
+for(const tr of rows.querySelectorAll('tr')){
+const d={
+output:tr.querySelector('.out').value,
+title_pdf:tr.querySelector('.pdf').value,
+title_book:tr.querySelector('.title').value,
+author:tr.querySelector('.author').value,
+link:tr.querySelector('.link').value,
+lang:tr.querySelector('.lang').value,
+asin:tr.querySelector('.asin').value
+};
+if(!d.asin)continue;
+const name=d.lang==='ja'?`${d.asin}.pdf`:`${slugify(d.output||d.title_book||d.asin)}.pdf`;
+zip.file(name,await buildPDF(d));
+}
+saveAs(await zip.generateAsync({type:'blob'}),'bulk-pdfs.zip');
+}
+</script>
 </body>
 </html>
